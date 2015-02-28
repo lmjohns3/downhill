@@ -1,6 +1,5 @@
 from .base import build, Optimizer
-from .first import SGD, NAG
-from .second import HF
+from .first_order import SGD, NAG
 from .adaptive import RProp, RMSProp, ADADELTA, ESGD
 
 
@@ -49,8 +48,13 @@ def minimize(loss, params, inputs, train, valid,
         may be "stale"; however, they will always contain the most recently
         computed values.
     '''
-    opt = build(method, loss=loss, params=params, monitors=monitors, **kwargs)
+    opt = build(method,
+                loss=loss,
+                params=params,
+                inputs=inputs,
+                updates=updates,
+                monitors=monitors)
     train_monitors = valid_monitors = None
-    for train_monitors, valid_monitors in opt.minimize(train, valid):
+    for train_monitors, valid_monitors in opt.minimize(train, valid, **kwargs):
         pass
     return train_monitors, valid_monitors

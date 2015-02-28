@@ -13,17 +13,17 @@ from .first_order import SGD
 logging = climate.get_logger(__name__)
 
 
-class Rprop(SGD):
+class RProp(SGD):
     r'''Trainer for neural nets using resilient backpropagation.
 
-    The Rprop method uses the same general strategy as SGD (both methods are
+    The RProp method uses the same general strategy as SGD (both methods are
     make small parameter adjustments using local derivative information). The
-    difference is that in Rprop, only the signs of the partial derivatives are
+    difference is that in RProp, only the signs of the partial derivatives are
     taken into account when making parameter updates. That is, the step size for
     each parameter is independent of the magnitude of the gradient for that
     parameter.
 
-    To accomplish this, Rprop maintains a separate learning rate for every
+    To accomplish this, RProp maintains a separate learning rate for every
     parameter in the model, and adjusts this learning rate based on the
     consistency of the sign of the gradient of the loss with respect to that
     parameter over time. Whenever two consecutive gradients for a parameter have
@@ -48,7 +48,7 @@ class Rprop(SGD):
     (agree) in sign, and :math:`\Delta_+` and :math:`\Delta_-` are the maximum
     and minimum step size.
 
-    The implementation here is actually the "iRprop-" variant of Rprop described
+    The implementation here is actually the "iRprop-" variant of RProp described
     in Algorithm 4 from Igel and Huesken, "Improving the Rprop Learning
     Algorithm" (2000). This variant resets the running gradient estimates to
     zero in cases where the previous and current gradients have switched signs.
@@ -59,7 +59,7 @@ class Rprop(SGD):
         self.step_decrease = as_float(kwargs.get('rprop_decrease', 0.99))
         self.min_step = as_float(kwargs.get('rprop_min_step', 0.))
         self.max_step = as_float(kwargs.get('rprop_max_step', 100.))
-        super(Rprop, self).prepare(*args, **kwargs)
+        super(RProp, self).prepare(*args, **kwargs)
 
     def updates_for(self, param, grad):
         grad_tm1 = shared_like(param, 'grad')
@@ -77,10 +77,10 @@ class Rprop(SGD):
         yield step_tm1, step
 
 
-class RmsProp(SGD):
-    r'''RmsProp trains neural network models using scaled SGD.
+class RMSProp(SGD):
+    r'''RMSProp trains neural network models using scaled SGD.
 
-    The RmsProp method uses the same general strategy as SGD, in the sense that
+    The RMSProp method uses the same general strategy as SGD, in the sense that
     all gradient-based methods make small parameter adjustments using local
     derivative information. The difference here is that as gradients are
     computed during each parameter update, an exponential moving average of
@@ -116,7 +116,7 @@ class RmsProp(SGD):
 
     def prepare(self, **kwargs):
         self.ewma = as_float(np.exp(-np.log(2) / kwargs.get('rms_halflife', 7)))
-        super(RmsProp, self).prepare(**kwargs)
+        super(RMSProp, self).prepare(**kwargs)
 
     def updates_for(self, param, grad):
         eps = 1e-4
@@ -133,7 +133,7 @@ class RmsProp(SGD):
         yield param, param + vel_t
 
 
-class ADADELTA(RmsProp):
+class ADADELTA(RMSProp):
     r'''ADADELTA trains neural network models using scaled :class:`SGD`.
 
     The ADADELTA method uses the same general strategy as :class:`SGD` (both
@@ -152,9 +152,9 @@ class ADADELTA(RmsProp):
         p_{t+1} &=& p_t + v_{t+1}
         \end{eqnarray*}
 
-    Like :class:`Rprop` and the :class:`RmsProp`--:class:`ESGD` family, this
+    Like :class:`Rprop` and the :class:`RMSProp`--:class:`ESGD` family, this
     learning method effectively maintains a sort of parameter-specific momentum
-    value. The primary difference between this method and :class:`RmsProp` is
+    value. The primary difference between this method and :class:`RMSProp` is
     that ADADELTA additionally incorporates a sliding window of RMS parameter
     steps, obviating the need for a learning rate parameter.
 
@@ -180,7 +180,7 @@ class ADADELTA(RmsProp):
         yield param, param - delta
 
 
-class ESGD(RmsProp):
+class ESGD(RMSProp):
     r'''Equilibrated SGD computes a diagonal preconditioner for gradient descent.
 
     The ESGD method uses the same general strategy as SGD, in the sense that all
@@ -201,9 +201,9 @@ class ESGD(RmsProp):
         p_{t+1} &=& p_t + v_{t+1}
         \end{eqnarray*}
 
-    Like :class:`Rprop` and the :class:`ADADELTA`--:class:`RmsProp` family, this
+    Like :class:`Rprop` and the :class:`ADADELTA`--:class:`RMSProp` family, this
     learning method effectively maintains a sort of parameter-specific momentum
-    value. The primary difference between this method and :class:`RmsProp` is
+    value. The primary difference between this method and :class:`RMSProp` is
     that ESGD treats the normalizing fraction explicitly as a preconditioner for
     the diaonal of the Hessian, and estimates this diagonal by drawing a vector
     of standard normal values at every training step. The primary difference

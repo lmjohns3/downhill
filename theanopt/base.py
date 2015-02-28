@@ -46,7 +46,7 @@ def as_float(x):
     return TT.cast(x, theano.config.floatX)
 
 
-def build(layer, *args, **kwargs):
+def build(method, *args, **kwargs):
     '''Construct an optimizer by name.
 
     Parameters
@@ -60,10 +60,10 @@ def build(layer, *args, **kwargs):
 
     Returns
     -------
-    layer : :class:`Optimizer`
+    optimizer : :class:`Optimizer`
         An optimizer instance.
     '''
-    return Optimizer.build(layer, *args, **kwargs)
+    return Optimizer.build(method, *args, **kwargs)
 
 
 class Registrar(type):
@@ -324,7 +324,7 @@ class Optimizer(Base):
             yield training, validation
         self.set_params(self._best_params)
 
-    def optimize(self, train, valid, **kwargs):
+    def minimize(self, train, valid, **kwargs):
         '''Optimize our loss using a training and validation dataset.
 
         This method is a thin wrapper over the :func:`iteropt` method. It simply
