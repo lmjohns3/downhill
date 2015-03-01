@@ -143,7 +143,7 @@ class Optimizer(Base):
         logging.info('compiling evaluation function')
         self.f_eval = theano.function(
             self.inputs, self._monitor_exprs, updates=self.updates)
-        logging.info('compiling %s learning function', self.__class__.__name__)
+        logging.info('compiling %s step function', self.__class__.__name__)
         updates = list(self.updates) + list(self.optimization_updates())
         self.f_step = theano.function(
             self.inputs, self._monitor_exprs, updates=updates)
