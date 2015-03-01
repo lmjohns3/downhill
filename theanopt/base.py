@@ -108,11 +108,16 @@ class Optimizer(Base):
     MIN_IMPROVEMENT = 0
     PATIENCE = 10
 
+    # default gradient-based optimization parameters.
+    MAX_GRADIENT_NORM = 1e6
+
     def __init__(self, loss, params, inputs, updates=(), monitors=()):
         self.loss = loss
         self.params = params
         self.inputs = inputs
         self.updates = updates
+        if hasattr(updates, 'items') and callable(updates.items):
+            self.updates = updates.items()
 
         self._shapes = [p.get_value(borrow=True).shape for p in self.params]
         self._counts = [np.prod(s) for s in self._shapes]
@@ -297,9 +302,11 @@ class Optimizer(Base):
             A dictionary containing monitor values evaluated on the validation
             dataset.
         '''
+        self.patience = kwargs.get('patience', self.PATIENCE)
         self.validate_every = kwargs.get('validate_every', self.VALIDATE_EVERY)
         self.min_improvement = kwargs.get('min_improvement', self.MIN_IMPROVEMENT)
-        self.patience = kwargs.get('patience', self.PATIENCE)
+        self.max_gradient_norm = as_float(
+            kwargs.get('max-gradient-norm', self.MAX_GRADIENT_NORM))
         self.prepare(**kwargs)
         self.compile()
         iteration = 0
