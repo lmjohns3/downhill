@@ -4,17 +4,10 @@ optimization and fast computations on the GPU.
 
 Several optimization algorithms are included:
 
-- First-order stochastic gradient descent: :class:`SGD
-  <theanopt.first_order.SGD>` and :class:`NAG <theanopt.first_order.NAG>`.
-
-- Second-order stochastic gradient descent: :class:`HF
-  <theanopt.second_order.HF>`.
-
-- First-order stochastic techniques with adaptive learning rates: :class:`Rprop
-  <theanopt.adaptive.Rprop>`, :class:`RmsProp <theanopt.adaptive.RmsProp>`,
-  :class:`Equilibrated SGD <theanopt.adaptive.ESGD>`, and :class:`ADADELTA
-  <theanopt.adaptive.ADADELTA>`.
-
+- First-order stochastic gradient descent: SGD_ and NAG_.
+- Second-order stochastic gradient descent: `Hessian-free`_.
+- First-order stochastic techniques with adaptive learning rates: RProp_
+  RMSProp_, `Equilibrated SGD`_, and ADADELTA_.
 - Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
 The source code for ``theanopt`` lives at http://github.com/lmjohns3/theanopt,
@@ -23,6 +16,14 @@ and discussion happen on the `mailing list`_.
 
 .. _Theano: http://deeplearning.net/software/theano/
 .. _mailing list: https://groups.google.com/forum/#!forum/theanopt
+
+.. _SGD: http://theanopt.readthedocs.org/en/latest/generated/theanopt.first_order.SGD.html
+.. _NAG: http://theanopt.readthedocs.org/en/latest/generated/theanopt.first_order.NAG.html
+.. _Hessian-free: http://theanopt.readthedocs.org/en/latest/generated/theanopt.second_order.HF.html
+.. _RProp: http://theanopt.readthedocs.org/en/latest/generated/theanopt.adaptive.RProp.html
+.. _RMSProp: http://theanopt.readthedocs.org/en/latest/generated/theanopt.adaptive.RMSProp.html
+.. _ADADELTA: http://theanopt.readthedocs.org/en/latest/generated/theanopt.adaptive.ADADELTA.html
+.. _Equilibrated SGD: http://theanopt.readthedocs.org/en/latest/generated/theanopt.adaptive.ESGD.html
 
 Example Code
 ============
