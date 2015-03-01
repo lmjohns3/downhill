@@ -15,7 +15,7 @@ Several optimization algorithms are included:
   :class:`Equilibrated SGD <theanopt.adaptive.ESGD>`, and :class:`ADADELTA
   <theanopt.adaptive.ADADELTA>`.
 
-- Several algorithms from ``scipy.optimize.minimize``.
+- Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
 The source code for ``theanopt`` lives at http://github.com/lmjohns3/theanopt,
 the documentation lives at http://theanopt.readthedocs.org, and announcements
@@ -27,8 +27,8 @@ and discussion happen on the `mailing list`_.
 Example Code
 ============
 
-Let's say you want to compute a low-rank approximation for a matrix ``x``. You
-first set up a loss using Theano, and then optimize it using ``theanopt``::
+This is pretty straightforward to model using Theano. Once you have an
+expression for the loss, you can optimize it using ``theanopt``::
 
   import climate
   import theano
@@ -38,7 +38,7 @@ first set up a loss using Theano, and then optimize it using ``theanopt``::
 
   climate.enable_default_logging()
 
-  A, B, K = 1000, 2000, 10
+  A, B, K = 100, 1000, 10
 
   x = TT.matrix('x')
 
@@ -47,8 +47,15 @@ first set up a loss using Theano, and then optimize it using ``theanopt``::
 
   err = TT.sqr(x - TT.dot(u, v))
 
-  exp = theanopt.minimize(
+  theanopt.minimize(
       loss=err.mean() + abs(u).mean() + (v * v).mean(),
       params=[u, v],
       inputs=[x],
+      train=my_data_set.training,
+      valid=my_data_set.validation,
+      batch_size=A,
+      monitors=(
+          ('u<0.1', 100 * (abs(u) < 0.1).mean()),
+          ('v<0.1', 100 * (abs(v) < 0.1).mean()),
+      ),
   )
