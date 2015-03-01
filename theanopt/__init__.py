@@ -1,10 +1,12 @@
-from .base import build, Optimizer
-from .first_order import SGD, NAG
 from .adaptive import RProp, RMSProp, ADADELTA, ESGD
+from .base import build, Optimizer
+from .dataset import Dataset
+from .first_order import SGD, NAG
 
 
 def minimize(loss, params, inputs, train, valid,
              method='rmsprop', updates=(), monitors=(),
+             batch_size=32, train_batches=None, valid_batches=None,
              **kwargs):
     '''Minimize a loss function with respect to some symbolic parameters.
 
@@ -31,6 +33,14 @@ def minimize(loss, params, inputs, train, valid,
         Additional values to monitor during optimization. These must be provided
         as either a sequence of (name, expression) tuples, or as a dictionary
         mapping string names to Theano expressions.
+    batch_size : int, optional
+        Size of batches provided by datasets. Defaults to 32.
+    train_batches : int, optional
+        Number of batches of training data to iterate over during one pass of
+        optimization. Defaults to None, which uses the entire training dataset.
+    valid_batches : int, optional
+        Number of batches of validation data to iterate over during one pass of
+        validation. Defaults to None, which uses the entire validation dataset.
 
     Additional keyword arguments are passed to the optimizer instance.
 
@@ -48,13 +58,23 @@ def minimize(loss, params, inputs, train, valid,
         may be "stale"; however, they will always contain the most recently
         computed values.
     '''
-    opt = build(method,
-                loss=loss,
-                params=params,
-                inputs=inputs,
-                updates=updates,
-                monitors=monitors)
-    train_monitors = valid_monitors = None
-    for train_monitors, valid_monitors in opt.minimize(train, valid, **kwargs):
-        pass
-    return train_monitors, valid_monitors
+    if not isinstance(train, Dataset):
+        train = Dataset(
+            train,
+            name='train',
+            batch_size=batch_size,
+            iteration_size=train_batches,
+        )
+    if not isinstance(valid, Dataset):
+        valid = Dataset(
+            valid,
+            name='valid',
+            batch_size=batch_size,
+            iteration_size=valid_batches,
+        )
+    return build(method,
+                 loss=loss,
+                 params=params,
+                 inputs=inputs,
+                 updates=updates,
+                 monitors=monitors).minimize(train, valid, **kwargs)
