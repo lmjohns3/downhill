@@ -10,12 +10,7 @@ Several optimization algorithms are included:
   RMSProp_, `Equilibrated SGD`_, and ADADELTA_.
 - Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
-The source code for ``theanopt`` lives at http://github.com/lmjohns3/theanopt,
-the documentation lives at http://theanopt.readthedocs.org, and announcements
-and discussion happen on the `mailing list`_.
-
 .. _Theano: http://deeplearning.net/software/theano/
-.. _mailing list: https://groups.google.com/forum/#!forum/theanopt
 
 .. _SGD: http://theanopt.readthedocs.org/en/latest/generated/theanopt.first_order.SGD.html
 .. _NAG: http://theanopt.readthedocs.org/en/latest/generated/theanopt.first_order.NAG.html
@@ -60,3 +55,12 @@ expression for the loss, you can optimize it using ``theanopt``::
           ('v<0.1', 100 * (abs(v) < 0.1).mean()),
       ),
   )
+
+More Information
+================
+
+Source: http://github.com/lmjohns3/theanopt
+
+Documentation: http://theanopt.readthedocs.org
+
+Mailing list: https://groups.google.com/forum/#!forum/theanopt
