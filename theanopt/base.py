@@ -179,7 +179,9 @@ class Optimizer(Base):
             Generates a sequence of tuples representing each of the parameters
             requested and the corresponding Theano gradient expressions.
         '''
-        for grad in TT.grad(self.loss, params or self.params):
+        if params is None:
+            params = self.params
+        for param, grad in zip(params, TT.grad(self.loss, params)):
             norm = TT.sqrt((grad * grad).sum())
             yield param, grad * TT.minimum(1, self.max_gradient_norm / norm)
 
