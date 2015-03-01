@@ -12,13 +12,13 @@ Several optimization algorithms are included:
 
 .. _Theano: http://deeplearning.net/software/theano/
 
-.. _SGD: http://theanopt.readthedocs.org/en/latest/generated/theanopt.first_order.SGD.html
-.. _NAG: http://theanopt.readthedocs.org/en/latest/generated/theanopt.first_order.NAG.html
-.. _Hessian-free: http://theanopt.readthedocs.org/en/latest/generated/theanopt.second_order.HF.html
-.. _RProp: http://theanopt.readthedocs.org/en/latest/generated/theanopt.adaptive.RProp.html
-.. _RMSProp: http://theanopt.readthedocs.org/en/latest/generated/theanopt.adaptive.RMSProp.html
-.. _ADADELTA: http://theanopt.readthedocs.org/en/latest/generated/theanopt.adaptive.ADADELTA.html
-.. _Equilibrated SGD: http://theanopt.readthedocs.org/en/latest/generated/theanopt.adaptive.ESGD.html
+.. _SGD: http://theanopt.readthedocs.org/en/stable/generated/theanopt.first_order.SGD.html
+.. _NAG: http://theanopt.readthedocs.org/en/stable/generated/theanopt.first_order.NAG.html
+.. _Hessian-free: http://theanopt.readthedocs.org/en/stable/generated/theanopt.second_order.HF.html
+.. _RProp: http://theanopt.readthedocs.org/en/stable/generated/theanopt.adaptive.RProp.html
+.. _RMSProp: http://theanopt.readthedocs.org/en/stable/generated/theanopt.adaptive.RMSProp.html
+.. _ADADELTA: http://theanopt.readthedocs.org/en/stable/generated/theanopt.adaptive.ADADELTA.html
+.. _Equilibrated SGD: http://theanopt.readthedocs.org/en/stable/generated/theanopt.adaptive.ESGD.html
 
 Example Code
 ============
