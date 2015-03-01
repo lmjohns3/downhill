@@ -6,7 +6,7 @@ Several optimization algorithms are included:
 
 - First-order stochastic gradient descent: SGD_ and NAG_.
 - Second-order stochastic gradient descent: `Hessian-free`_.
-- First-order stochastic techniques with adaptive learning rates: RProp_
+- First-order stochastic techniques with adaptive learning rates: RProp_,
   RMSProp_, `Equilibrated SGD`_, and ADADELTA_.
 - Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
