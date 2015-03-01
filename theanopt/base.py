@@ -357,10 +357,10 @@ class Optimizer(Base):
             A dictionary containing monitor values evaluated on the validation
             dataset.
         '''
-        tm = vm = None
-        for tm, vm in self.iteropt(train, valid, **kwargs):
+        monitors = None
+        for monitors in self.iteropt(train, valid, **kwargs):
             pass
-        return tm, vm
+        return monitors
 
     def step(self, dataset):
         '''Advance the state of the optimizer by one step.
