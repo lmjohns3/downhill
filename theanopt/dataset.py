@@ -104,19 +104,22 @@ class Dataset:
         if not isinstance(inputs, (tuple, list)):
             inputs = (inputs, )
 
-        shape_str = '; '.join(str(x.shape) for x in inputs)
-
         L = inputs[0].shape[axis]
-        assert all(L == x.shape[axis] for L in inputs), \
-            'shapes do not match along axis {}: {}'.format(axis, shape_str)
+        assert all(L == x.shape[axis] for x in inputs), \
+            'shapes do not match along axis {}: {}'.format(
+                axis, '; '.join(str(x.shape) for x in inputs))
 
         for i in range(0, L, self.batch_size):
             batch = []
             for x in inputs:
                 slices = [slice(None) for _ in x.shape]
                 slices[axis] = slice(i, i + self.batch_size)
-                batch.append(x[tuple(slices)])
-            self.batches.append(batch)
+                b = x[tuple(slices)]
+                if b.shape[axis] != self.batch_size:
+                    break
+                batch.append(b)
+            else:
+                self.batches.append(batch)
 
         self.shuffle()
 
@@ -124,8 +127,10 @@ class Dataset:
             self.iteration_size = len(self.batches)
 
         logging.info('%s: %d of %d mini-batches of %s',
-                     self.name, self.iteration_size,
-                     len(self.batches), shape_str)
+                     self.name,
+                     self.iteration_size,
+                     len(self.batches),
+                     '; '.join(str(x.shape) for x in self.batches[0]))
 
     def __iter__(self):
         return self.iterate(True)
