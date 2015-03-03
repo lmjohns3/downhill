@@ -2,6 +2,9 @@
 Reference
 =========
 
+Base
+====
+
 .. automodule:: theanopt.base
    :no-members:
    :no-inherited-members:
