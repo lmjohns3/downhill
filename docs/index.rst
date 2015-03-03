@@ -12,8 +12,8 @@ Several optimization algorithms are included:
   <theanopt.first_order.SGD>` and :class:`NAG <theanopt.first_order.NAG>`.
 - Second-order stochastic gradient descent: :class:`HF
   <theanopt.second_order.HF>`.
-- First-order stochastic techniques with adaptive learning rates: :class:`Rprop
-  <theanopt.adaptive.Rprop>`, :class:`RmsProp <theanopt.adaptive.RmsProp>`,
+- First-order stochastic techniques with adaptive learning rates: :class:`RProp
+  <theanopt.adaptive.RProp>`, :class:`RMSProp <theanopt.adaptive.RMSProp>`,
   :class:`Equilibrated SGD <theanopt.adaptive.ESGD>`, and :class:`ADADELTA
   <theanopt.adaptive.ADADELTA>`.
 - Wrappers for several algorithms from ``scipy.optimize.minimize``.
