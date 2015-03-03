@@ -2,43 +2,7 @@
 Reference
 =========
 
-Feedforward networks
-====================
-
-.. automodule:: theanets.feedforward
-   :no-members:
-   :no-inherited-members:
-
-.. autosummary::
-   :toctree: generated/
-
-   load
-   Network
-   Autoencoder
-   Classifier
-   Regressor
-
-Recurrent networks
-==================
-
-.. automodule:: theanets.recurrent
-   :no-members:
-   :no-inherited-members:
-
-.. autosummary::
-   :toctree: generated/
-
-   batches
-   Network
-   Autoencoder
-   Classifier
-   Predictor
-   Regressor
-
-Layer types
-===========
-
-.. automodule:: theanets.layers
+.. automodule:: theanopt.base
    :no-members:
    :no-inherited-members:
 
@@ -46,86 +10,47 @@ Layer types
    :toctree: generated/
 
    build
-   Layer
-   Input
+   Optimizer
 
-Feedforward layers
-------------------
+First-Order Optimizers
+======================
 
-.. autosummary::
-   :toctree: generated/
-
-   Feedforward
-   Tied
-   Classifier
-
-Recurrent layers
-----------------
-
-.. autosummary::
-   :toctree: generated/
-
-   Recurrent
-   RNN
-   ARRNN
-   MRNN
-   LSTM
-   Bidirectional
-
-Training strategies
-===================
-
-.. automodule:: theanets.trainer
+.. automodule:: theanopt.first_order
    :no-members:
    :no-inherited-members:
-
-.. autosummary::
-   :toctree: generated/
-
-   Trainer
-
-Stochastic gradient trainers
-----------------------------
 
 .. autosummary::
    :toctree: generated/
 
    SGD
    NAG
-   Rprop
-   RmsProp
-   ADADELTA
-   HF
 
-Scipy optimizers
-----------------
+Second-Order Optimizers
+=======================
 
-.. autosummary::
-   :toctree: generated/
-
-   Scipy
-
-Specialized trainers
---------------------
-
-.. autosummary::
-   :toctree: generated/
-
-   Sample
-   SupervisedPretrainer
-   UnsupervisedPretrainer
-
-Drivers
-=======
-
-.. automodule:: theanets.main
+.. automodule:: theanopt.second_order
    :no-members:
    :no-inherited-members:
 
 .. autosummary::
    :toctree: generated/
 
-   Experiment
+   HF
+
+Adaptive Optimizers
+===================
+
+.. automodule:: theanopt.adaptive
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary::
+   :toctree: generated/
+
+   RProp
+   RMSProp
+   ADADELTA
+   ESGD
 
 Datasets
 ========
