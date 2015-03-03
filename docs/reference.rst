@@ -25,18 +25,6 @@ First-Order Optimizers
    SGD
    NAG
 
-Second-Order Optimizers
-=======================
-
-.. automodule:: theanopt.second_order
-   :no-members:
-   :no-inherited-members:
-
-.. autosummary::
-   :toctree: generated/
-
-   HF
-
 Adaptive Optimizers
 ===================
 
