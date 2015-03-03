@@ -55,7 +55,7 @@ Adaptive Optimizers
 Datasets
 ========
 
-.. automodule:: theanets.dataset
+.. automodule:: theanopt.dataset
    :no-members:
    :no-inherited-members:
 
