@@ -36,6 +36,8 @@ class SGD(Optimizer):
     def prepare(self, **kwargs):
         self.momentum = as_float(kwargs.get('momentum', 0.9))
         self.learning_rate = as_float(kwargs.get('learning_rate', 1e-4))
+        logging.info('-- momentum = %s', self.momentum)
+        logging.info('-- learning_rate = %s', self.learning_rate)
 
     def updates_for(self, param, grad):
         vel_tm1 = shared_like(param, 'vel')

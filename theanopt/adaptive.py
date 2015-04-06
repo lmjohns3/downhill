@@ -59,6 +59,10 @@ class RProp(SGD):
         self.step_decrease = as_float(kwargs.get('rprop_decrease', 0.99))
         self.min_step = as_float(kwargs.get('rprop_min_step', 0.))
         self.max_step = as_float(kwargs.get('rprop_max_step', 100.))
+        logging.info('-- rprop_increase = %s', self.step_increase)
+        logging.info('-- rprop_decrease = %s', self.step_decrease)
+        logging.info('-- rprop_min_step = %s', self.min_step)
+        logging.info('-- rprop_max_step = %s', self.max_step)
         super(RProp, self).prepare(*args, **kwargs)
 
     def updates_for(self, param, grad):
@@ -115,7 +119,9 @@ class RMSProp(SGD):
     '''
 
     def prepare(self, **kwargs):
-        self.ewma = as_float(np.exp(-np.log(2) / kwargs.get('rms_halflife', 7)))
+        halflife = kwargs.get('rms_halflife', 7)
+        logging.info('-- rms_halflife = %s', halflife)
+        self.ewma = as_float(np.exp(-np.log(2) / halflife))
         super(RMSProp, self).prepare(**kwargs)
 
     def updates_for(self, param, grad):
