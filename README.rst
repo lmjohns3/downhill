@@ -23,8 +23,11 @@ Several optimization algorithms are included:
 Example Code
 ============
 
-This is pretty straightforward to model using Theano. Once you have an
-expression for the loss, you can optimize it using ``theanopt``::
+Let's say you have 100 samples of 1000-dimensional data, and you want to
+represent your data as 100 coefficients in a 10-dimensional basis. This is
+pretty straightforward to model using Theano, using a matrix multiplication.
+Once you have constructed an expression for the loss, you can optimize it using
+``theanopt``::
 
   import climate
   import theano
