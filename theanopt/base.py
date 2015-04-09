@@ -308,7 +308,7 @@ class Optimizer(Base):
         self.validate_every = kwargs.get('validate_every', self.VALIDATE_EVERY)
         self.min_improvement = kwargs.get('min_improvement', self.MIN_IMPROVEMENT)
         self.max_gradient_norm = as_float(
-            kwargs.get('max-gradient-norm', self.MAX_GRADIENT_NORM))
+            kwargs.get('max_gradient_norm', self.MAX_GRADIENT_NORM))
         logging.info('-- patience = %s', self.patience)
         logging.info('-- min_improvement = %s', self.min_improvement)
         logging.info('-- validate_every = %s', self.validate_every)
