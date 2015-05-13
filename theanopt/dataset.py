@@ -75,9 +75,12 @@ class Dataset:
         given as one or more ndarrays. If not provided, defaults to 0.
     '''
 
+    count = 0
+
     def __init__(self, inputs, name=None, batch_size=32, iteration_size=None, axis=0):
         '''Create a minibatch dataset from data arrays or a callable.'''
-        self.name = name or 'dataset'
+        self.name = name or 'dataset{}'.format(Dataset.count)
+        Dataset.count += 1
         self.batch_size = batch_size
         self.iteration_size = iteration_size
 
