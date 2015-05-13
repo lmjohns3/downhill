@@ -2,20 +2,22 @@ import os
 import setuptools
 
 setuptools.setup(
-    name='theanopt',
+    name='downhill',
     version='0.1.0',
     packages=setuptools.find_packages(),
     author='Leif Johnson',
     author_email='leif@lmjohns3.com',
-    description='A library of theano optimization routines',
+    description='SGD-based optimization routines for theano',
     long_description=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'README.rst')).read(),
     license='MIT',
     url='http://github.com/lmjohns3/theanopt',
-    keywords=('gradient-descent '
-              'rmsprop '
-              'adadelta '
-              'sgd '
+    keywords=('adadelta '
+              'adagrad '
+              'gradient-descent '
+              'nesterov '
               'optimization '
+              'rmsprop '
+              'sgd '
               'theano '
               ),
     install_requires=['theano', 'climate'],

@@ -1,27 +1,27 @@
 ============
-``THEANOPT``
+``DOWNHILL``
 ============
 
-The ``theanopt`` package provides tools for minimizing scalar loss functions. It
+The ``downhill`` package provides tools for minimizing scalar loss functions. It
 uses Python for rapid development, and under the hood Theano_ provides graph
 optimization and fast computations on the GPU.
 
 Several optimization algorithms are included:
 
 - First-order stochastic gradient descent: :class:`SGD
-  <theanopt.first_order.SGD>` and :class:`NAG <theanopt.first_order.NAG>`.
+  <downhill.first_order.SGD>` and :class:`NAG <downhill.first_order.NAG>`.
 - First-order stochastic techniques with adaptive learning rates: :class:`RProp
-  <theanopt.adaptive.RProp>`, :class:`RMSProp <theanopt.adaptive.RMSProp>`,
-  :class:`Equilibrated SGD <theanopt.adaptive.ESGD>`, and :class:`ADADELTA
-  <theanopt.adaptive.ADADELTA>`.
+  <downhill.adaptive.RProp>`, :class:`RMSProp <downhill.adaptive.RMSProp>`,
+  :class:`Equilibrated SGD <downhill.adaptive.ESGD>`, and :class:`ADADELTA
+  <downhill.adaptive.ADADELTA>`.
 - Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
-The source code for ``theanopt`` lives at http://github.com/lmjohns3/theanopt,
-the documentation lives at http://theanopt.readthedocs.org, and announcements
+The source code for ``downhill`` lives at http://github.com/lmjohns3/downhill,
+the documentation lives at http://downhill.readthedocs.org, and announcements
 and discussion happen on the `mailing list`_.
 
 .. _Theano: http://deeplearning.net/software/theano/
-.. _mailing list: https://groups.google.com/forum/#!forum/theanopt
+.. _mailing list: https://groups.google.com/forum/#!forum/downhill
 
 Example Code
 ============
@@ -43,12 +43,12 @@ from growing too large.
 
 This is pretty straightforward to model using Theano. Once you have set up the
 appropriate variables and an expression for the loss, you can optimize it using
-``theanopt``::
+``downhill``::
 
   import climate
   import theano
   import theano.tensor as TT
-  import theanopt
+  import downhill
   import my_data_set
 
   climate.enable_default_logging()
@@ -62,7 +62,7 @@ appropriate variables and an expression for the loss, you can optimize it using
 
   err = TT.sqr(x - TT.dot(u, v))
 
-  theanopt.minimize(
+  downhill.minimize(
       loss=err.mean() + abs(u).mean() + (v * v).mean(),
       params=[u, v],
       inputs=[x],

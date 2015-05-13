@@ -5,7 +5,7 @@ Reference
 Base
 ====
 
-.. automodule:: theanopt.base
+.. automodule:: downhill.base
    :no-members:
    :no-inherited-members:
 
@@ -18,7 +18,7 @@ Base
 First-Order Optimizers
 ======================
 
-.. automodule:: theanopt.first_order
+.. automodule:: downhill.first_order
    :no-members:
    :no-inherited-members:
 
@@ -31,7 +31,7 @@ First-Order Optimizers
 Adaptive Optimizers
 ===================
 
-.. automodule:: theanopt.adaptive
+.. automodule:: downhill.adaptive
    :no-members:
    :no-inherited-members:
 
@@ -46,7 +46,7 @@ Adaptive Optimizers
 Datasets
 ========
 
-.. automodule:: theanopt.dataset
+.. automodule:: downhill.dataset
    :no-members:
    :no-inherited-members:
 

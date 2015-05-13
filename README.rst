@@ -1,4 +1,4 @@
-The ``theanopt`` package provides tools for minimizing scalar loss functions. It
+The ``downhill`` package provides tools for minimizing scalar loss functions. It
 uses Python for rapid development, and under the hood Theano_ provides graph
 optimization and fast computations on the GPU.
 
@@ -12,13 +12,13 @@ Several optimization algorithms are included:
 
 .. _Theano: http://deeplearning.net/software/theano/
 
-.. _SGD: http://theanopt.readthedocs.org/en/stable/generated/theanopt.first_order.SGD.html
-.. _NAG: http://theanopt.readthedocs.org/en/stable/generated/theanopt.first_order.NAG.html
-.. _Hessian-free: http://theanopt.readthedocs.org/en/stable/generated/theanopt.second_order.HF.html
-.. _RProp: http://theanopt.readthedocs.org/en/stable/generated/theanopt.adaptive.RProp.html
-.. _RMSProp: http://theanopt.readthedocs.org/en/stable/generated/theanopt.adaptive.RMSProp.html
-.. _ADADELTA: http://theanopt.readthedocs.org/en/stable/generated/theanopt.adaptive.ADADELTA.html
-.. _Equilibrated SGD: http://theanopt.readthedocs.org/en/stable/generated/theanopt.adaptive.ESGD.html
+.. _SGD: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.SGD.html
+.. _NAG: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.NAG.html
+.. _Hessian-free: http://downhill.readthedocs.org/en/stable/generated/downhill.second_order.HF.html
+.. _RProp: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RProp.html
+.. _RMSProp: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RMSProp.html
+.. _ADADELTA: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ADADELTA.html
+.. _Equilibrated SGD: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ESGD.html
 
 Example Code
 ============
@@ -27,12 +27,12 @@ Let's say you have 100 samples of 1000-dimensional data, and you want to
 represent your data as 100 coefficients in a 10-dimensional basis. This is
 pretty straightforward to model using Theano, using a matrix multiplication.
 Once you have constructed an expression for the loss, you can optimize it using
-``theanopt``::
+``downhill``::
 
   import climate
   import theano
   import theano.tensor as TT
-  import theanopt
+  import downhill
   import my_data_set
 
   climate.enable_default_logging()
@@ -46,7 +46,7 @@ Once you have constructed an expression for the loss, you can optimize it using
 
   err = TT.sqr(x - TT.dot(u, v))
 
-  theanopt.minimize(
+  downhill.minimize(
       loss=err.mean() + abs(u).mean() + (v * v).mean(),
       params=[u, v],
       inputs=[x],
@@ -62,8 +62,8 @@ Once you have constructed an expression for the loss, you can optimize it using
 More Information
 ================
 
-Source: http://github.com/lmjohns3/theanopt
+Source: http://github.com/lmjohns3/downhill
 
-Documentation: http://theanopt.readthedocs.org
+Documentation: http://downhill.readthedocs.org
 
-Mailing list: https://groups.google.com/forum/#!forum/theanopt
+Mailing list: https://groups.google.com/forum/#!forum/downhill
