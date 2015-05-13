@@ -228,7 +228,7 @@ class Optimizer(Base):
 
         Parameters
         ----------
-        dataset : :class:`Dataset <theanopt.dataset.Dataset>`
+        dataset : :class:`Dataset <downhill.dataset.Dataset>`
             A set of data to use for evaluating the model.
 
         Returns
@@ -289,9 +289,9 @@ class Optimizer(Base):
 
         Parameters
         ----------
-        train : :class:`Dataset <theanopt.dataset.Dataset>`
+        train : :class:`Dataset <downhill.dataset.Dataset>`
             A set of training data for computing updates to model parameters.
-        valid : :class:`Dataset <theanopt.dataset.Dataset>`
+        valid : :class:`Dataset <downhill.dataset.Dataset>`
             A set of validation data for computing monitor values and
             determining when the loss has stopped improving.
 
@@ -346,9 +346,9 @@ class Optimizer(Base):
 
         Parameters
         ----------
-        train : :class:`Dataset <theanopt.dataset.Dataset>`
+        train : :class:`Dataset <downhill.dataset.Dataset>`
             A set of training data for computing updates to model parameters.
-        valid : :class:`Dataset <theanopt.dataset.Dataset>`
+        valid : :class:`Dataset <downhill.dataset.Dataset>`
             A set of validation data for computing monitor values and
             determining when the loss has stopped improving.
 
@@ -371,7 +371,7 @@ class Optimizer(Base):
 
         Parameters
         ----------
-        dataset : :class:`Dataset <theanopt.dataset.Dataset>`
+        dataset : :class:`Dataset <downhill.dataset.Dataset>`
             A dataset for optimizing the model.
 
         Returns
