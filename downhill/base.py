@@ -109,7 +109,8 @@ class Optimizer(Base):
     PATIENCE = 10
 
     # default gradient-based optimization parameters.
-    MAX_GRADIENT_NORM = 1e6
+    MAX_GRADIENT_NORM = 1000000
+    GRADIENT_CLIP = 1000
 
     def __init__(self, loss, params, inputs, updates=(), monitors=()):
         self.loss = loss
@@ -183,7 +184,9 @@ class Optimizer(Base):
             params = self.params
         for param, grad in zip(params, TT.grad(self.loss, params)):
             norm = TT.sqrt((grad * grad).sum())
-            yield param, grad * TT.minimum(1, self.max_gradient_norm / norm)
+            yield param, TT.clip(
+                grad * TT.minimum(1, self.max_gradient_norm / norm),
+                -self.gradient_clip, self.gradient_clip)
 
     def set_params(self, targets):
         '''Set the values of the parameters to the given target values.
@@ -309,9 +312,12 @@ class Optimizer(Base):
         self.min_improvement = kwargs.get('min_improvement', self.MIN_IMPROVEMENT)
         self.max_gradient_norm = as_float(
             kwargs.get('max_gradient_norm', self.MAX_GRADIENT_NORM))
+        self.gradient_clip = as_float(
+            kwargs.get('gradient_clip', self.GRADIENT_CLIP))
         logging.info('-- patience = %s', self.patience)
         logging.info('-- min_improvement = %s', self.min_improvement)
         logging.info('-- validate_every = %s', self.validate_every)
+        logging.info('-- gradient_clip = %s', self.gradient_clip)
         logging.info('-- max_gradient_norm = %s', self.max_gradient_norm)
         self.prepare(**kwargs)
         self.compile()
