@@ -126,18 +126,19 @@ class RMSProp(SGD):
 
     def prepare(self, **kwargs):
         halflife = kwargs.get('rms_halflife', 7)
-        logging.info('-- rms_halflife = %s', halflife)
         self.ewma = as_float(np.exp(-np.log(2) / halflife))
+        self.epsilon = as_float(kwargs.get('rms_regularizer', 1e-8))
+        logging.info('-- rms_halflife = %s', halflife)
+        logging.info('-- rms_regularizer = %s', self.epsilon.eval())
         super(RMSProp, self).prepare(**kwargs)
 
     def updates_for(self, param, grad):
-        eps = 1e-4
         g1_tm1 = shared_like(param, 'g1_ewma')
         g2_tm1 = shared_like(param, 'g2_ewma')
         vel_tm1 = shared_like(param, 'vel')
         g1_t = self.ewma * g1_tm1 + (1 - self.ewma) * grad
         g2_t = self.ewma * g2_tm1 + (1 - self.ewma) * grad * grad
-        rms = TT.sqrt(g2_t - g1_t * g1_t + eps)
+        rms = TT.sqrt(g2_t - g1_t * g1_t + self.epsilon)
         vel_t = self.momentum * vel_tm1 - grad * self.learning_rate / rms
         yield g1_tm1, g1_t
         yield g2_tm1, g2_t
