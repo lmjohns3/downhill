@@ -21,7 +21,7 @@ the documentation lives at http://downhill.readthedocs.org, and announcements
 and discussion happen on the `mailing list`_.
 
 .. _Theano: http://deeplearning.net/software/theano/
-.. _mailing list: https://groups.google.com/forum/#!forum/downhill
+.. _mailing list: https://groups.google.com/forum/#!forum/downhill-users
 
 Example Code
 ============

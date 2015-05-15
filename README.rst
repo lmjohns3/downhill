@@ -66,4 +66,4 @@ Source: http://github.com/lmjohns3/downhill
 
 Documentation: http://downhill.readthedocs.org
 
-Mailing list: https://groups.google.com/forum/#!forum/downhill
+Mailing list: https://groups.google.com/forum/#!forum/downhill-users
