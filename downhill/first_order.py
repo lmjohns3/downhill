@@ -36,13 +36,13 @@ class SGD(Optimizer):
     surface.
     '''
 
-    def prepare(self, **kwargs):
+    def _prepare(self, **kwargs):
         self.momentum = as_float(kwargs.get('momentum', 0.9))
         self.learning_rate = as_float(kwargs.get('learning_rate', 1e-4))
         logging.info('-- momentum = %s', self.momentum)
         logging.info('-- learning_rate = %s', self.learning_rate)
 
-    def updates_for(self, param, grad):
+    def _get_updates_for(self, param, grad):
         vel_tm1 = shared_like(param, 'vel')
         vel_t = self.momentum * vel_tm1 - self.learning_rate * grad
         yield vel_tm1, vel_t
@@ -82,15 +82,18 @@ class NAG(SGD):
 
     In theory, this helps correct for oversteps during learning: If momentum
     would lead us to overshoot, then the gradient at that overshot place will
-    point backwards, toward where we came from. For details on this idea, see
-    Sutskever, Martens, Dahl, and Hinton, "On the importance of initialization
-    and momentum in deep learning" (ICML 2013)
-    http://jmlr.csail.mit.edu/proceedings/papers/v28/sutskever13.pdf
+    point backwards, toward where we came from. See [1]_ for details on this idea.
+
+    References
+    ----------
+    .. [1] I. Sutskever, J. Martens, G. Dahl, & G. Hinton. (ICML 2013) "On the
+       importance of initialization and momentum in deep learning."
+       http://jmlr.csail.mit.edu/proceedings/papers/v28/sutskever13.pdf
     '''
 
-    def updates_for(self, param, grad):
+    def _get_updates_for(self, param, grad):
         # see https://github.com/lisa-lab/pylearn2/pull/136#issuecomment-10381617
-        vel_tm1 = self.shared_like(param, 'vel')
+        vel_tm1 = shared_like(param, 'vel')
         vel_t = self.momentum * vel_tm1 - self.learning_rate * grad
         yield vel_tm1, vel_t
         yield param, param + self.momentum * vel_t - self.learning_rate * grad
