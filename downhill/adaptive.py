@@ -7,6 +7,8 @@ import climate
 import numpy as np
 import theano.tensor as TT
 
+from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+
 from .util import as_float, shared_like
 from .first_order import SGD
 
@@ -56,7 +58,7 @@ class RProp(SGD):
     zero in cases where the previous and current gradients have switched signs.
     '''
 
-    def prepare(self, **kwargs):
+    def _prepare(self, **kwargs):
         self.step_increase = as_float(kwargs.get('rprop_increase', 1.01))
         self.step_decrease = as_float(kwargs.get('rprop_decrease', 0.99))
         self.min_step = as_float(kwargs.get('rprop_min_step', 0.))
@@ -65,9 +67,9 @@ class RProp(SGD):
         logging.info('-- rprop_decrease = %s', self.step_decrease)
         logging.info('-- rprop_min_step = %s', self.min_step)
         logging.info('-- rprop_max_step = %s', self.max_step)
-        super(RProp, self).prepare(*args, **kwargs)
+        super(RProp, self)._prepare(**kwargs)
 
-    def updates_for(self, param, grad):
+    def _get_updates_for(self, param, grad):
         grad_tm1 = shared_like(param, 'grad')
         step_tm1 = shared_like(param, 'step', self.learning_rate.value)
         test = grad * grad_tm1
@@ -126,15 +128,15 @@ class RMSProp(SGD):
     values.
     '''
 
-    def prepare(self, **kwargs):
+    def _prepare(self, **kwargs):
         halflife = kwargs.get('rms_halflife', 7)
         self.ewma = as_float(np.exp(-np.log(2) / halflife))
         self.epsilon = as_float(kwargs.get('rms_regularizer', 1e-8))
         logging.info('-- rms_halflife = %s', halflife)
         logging.info('-- rms_regularizer = %s', self.epsilon.eval())
-        super(RMSProp, self).prepare(**kwargs)
+        super(RMSProp, self)._prepare(**kwargs)
 
-    def updates_for(self, param, grad):
+    def _get_updates_for(self, param, grad):
         g1_tm1 = shared_like(param, 'g1_ewma')
         g2_tm1 = shared_like(param, 'g2_ewma')
         vel_tm1 = shared_like(param, 'vel')
@@ -183,7 +185,7 @@ class ADADELTA(RMSProp):
     learning rate method," available at http://arxiv.org/abs/1212.5701.
     '''
 
-    def updates_for(self, param, grad):
+    def _get_updates_for(self, param, grad):
         eps = 1e-4
         x2_tm1 = shared_like(param, 'x2_ewma')
         g2_tm1 = shared_like(param, 'g2_ewma')
@@ -241,7 +243,7 @@ class ESGD(RMSProp):
         self.rng = RandomStreams()
         super(ESGD, self).__init__(*args, **kwargs)
 
-    def updates_for(self, param, grad):
+    def _get_updates_for(self, param, grad):
         eps = 1e-4  # more or less from the paper
         D_tm1 = shared_like(param, 'D_ewma')
         vel_tm1 = shared_like(param, 'vel')
