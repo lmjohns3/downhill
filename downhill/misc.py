@@ -29,7 +29,7 @@ class Scipy(Optimizer):
     minimize a cost function: evaluating the cost function for a specific
     setting of model parameters, and computing the gradient of the cost function
     for a specific setting of model parameters. Both of these computations are
-    implemented by the ``theanopt`` package and may, if you have a GPU, involve
+    implemented by the ``downhill`` package and may, if you have a GPU, involve
     computing values on the GPU.
 
     However, all of the optimization steps that might be performed once these
@@ -102,7 +102,7 @@ class Scipy(Optimizer):
         ----------
         x : ndarray
             An array of parameter values to set our model at.
-        dataset : :class:`Dataset <theanopt.dataset.Dataset>`
+        dataset : :class:`Dataset <downhill.dataset.Dataset>`
             A set of data over which to compute our loss function.
 
         Returns
@@ -121,7 +121,7 @@ class Scipy(Optimizer):
         ----------
         x : ndarray
             An array of parameter values to set our model at.
-        dataset : :class:`Dataset <theanopt.dataset.Dataset>`
+        dataset : :class:`Dataset <downhill.dataset.Dataset>`
             A set of data over which to compute our gradients.
 
         Returns
@@ -141,7 +141,7 @@ class Scipy(Optimizer):
 
         Parameters
         ----------
-        dataset : :class:`Dataset <theanopt.dataset.Dataset>`
+        dataset : :class:`Dataset <downhill.dataset.Dataset>`
             A dataset for training the model.
 
         Returns
