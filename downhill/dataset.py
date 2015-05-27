@@ -32,10 +32,9 @@ class Dataset:
 
     For many tasks, a dataset is obtained as a large block of sample data, which
     in Python is normally assembled as a ``numpy`` ndarray. To use this class on
-    such a dataset, just pass in a ``numpy`` array. If multiple inputs are
-    required to compute your loss, pass a tuple or list of ``numpy`` arrays; the
-    input arrays should have the same size along one axis, so that they all can
-    be split into mini-batches.
+    such a dataset, just pass in a list or tuple containing ``numpy`` arrays;
+    the number of these arrays must match the number of inputs that your loss
+    computation requires.
 
     There are some cases when a suitable set of training data would be
     prohibitively expensive to assemble in memory as a single ``numpy`` array.
@@ -50,41 +49,46 @@ class Dataset:
 
         If this parameter is callable, then mini-batches will be obtained by
         calling the callable with no arguments; the callable is expected to
-        return a tuple of ndarrays that will be suitable for optimizing a loss.
+        return a tuple of ndarrays that will be suitable for optimizing the
+        loss at hand.
 
-        If this parameter is an ndarray, it is assumed to contain data for
-        computing the loss, with individual data samples arranged along axis N
-        (defaults to 0; see ``axis`` parameter below). If this parameter is a
-        list or tuple of ndarrays, they are also assumed to contain data for
-        computing the loss; the length of this tuple or list should match the
-        number of inputs required by the loss computation. If multiple ndarrays
-        are provided, their lengths along axis N must match.
+        If this parameter is a list or tuple, it must contain ndarrays (or
+        something similar with a ``shape`` attribute, like a pandas DataFrame).
+        These are assumed to contain data for computing the loss; the length of
+        this tuple or list should match the number of inputs required by the
+        loss computation. If multiple ndarrays are provided, their lengths along
+        the axis given by the ``axis`` parameter (defaults to 0) must match.
+
     name : str, optional
         A string that is used to describe this dataset. Usually something like
         'test' or 'train'.
+
     batch_size : int, optional
         The size of the mini-batches to create from the data sequences. Defaults
         to 32.
+
     iteration_size : int, optional
         The number of batches to yield for each call to iterate(). Defaults to
         the length of the data divided by batch_size. If the dataset is a
         callable, then the number is len(callable). If callable has no length,
         then the number is set to 100.
+
     axis : int, optional
         The axis along which to split the data arrays, if the first parameter is
         given as one or more ndarrays. If not provided, defaults to 0.
     '''
 
-    count = 0
+    _count = 0
 
     def __init__(self, inputs, name=None, batch_size=32, iteration_size=None, axis=0):
         '''Create a minibatch dataset from data arrays or a callable.'''
-        self.name = name or 'dataset{}'.format(Dataset.count)
-        Dataset.count += 1
+        self.name = name or 'dataset{}'.format(Dataset._count)
+        Dataset._count += 1
         self.batch_size = batch_size
         self.iteration_size = iteration_size
 
-        self.batches = []
+        self._batches = None
+        self._callable = None
 
         if isinstance(inputs, collections.Callable):
             self._init_callable(inputs)
@@ -92,18 +96,16 @@ class Dataset:
             self._init_arrays(inputs, axis)
 
     def _init_callable(self, inputs):
-        self.batches = inputs
+        self._callable = inputs
         if not self.iteration_size:
             try:
                 self.iteration_size = len(inputs)
-            except TypeError: # has no len
+            except TypeError:  # has no len
                 self.iteration_size = 100
         logging.info('%s: %d mini-batches from callable',
                      self.name, self.iteration_size)
 
     def _init_arrays(self, inputs, axis=0):
-        self._index = 0  # index for iteration.
-
         if not isinstance(inputs, (tuple, list)):
             inputs = (inputs, )
 
@@ -112,6 +114,8 @@ class Dataset:
             'shapes do not match along axis {}: {}'.format(
                 axis, '; '.join(str(x.shape) for x in inputs))
 
+        self._index = 0
+        self._batches = []
         for i in range(0, L, self.batch_size):
             batch = []
             for x in inputs:
@@ -122,43 +126,60 @@ class Dataset:
                     break
                 batch.append(b)
             else:
-                self.batches.append(batch)
+                self._batches.append(batch)
 
         self.shuffle()
 
         if not self.iteration_size:
-            self.iteration_size = len(self.batches)
+            self.iteration_size = len(self._batches)
 
         logging.info('%s: %d of %d mini-batches of %s',
                      self.name,
                      self.iteration_size,
-                     len(self.batches),
-                     '; '.join(str(x.shape) for x in self.batches[0]))
+                     len(self._batches),
+                     '; '.join(str(x.shape) for x in self._batches[0]))
 
     def __iter__(self):
         return self.iterate(True)
 
     def shuffle(self):
-        rng.shuffle(self.batches)
+        '''Shuffle the batches in the dataset.
 
-    def iterate(self, update=True):
-        return self._iter_callable() \
-            if callable(self.batches) \
-            else self._iter_batches(update)
+        If this dataset was constructed using a callable, this method has no
+        effect.
+        '''
+        if self._batches is not None:
+            rng.shuffle(self._batches)
 
-    def _iter_batches(self, update=True):
-        k = len(self.batches)
+    def iterate(self, shuffle=True):
+        '''Iterate over batches in the dataset.
+
+        This method generates ``iteration_size`` batches from the dataset and
+        then returns.
+
+        Parameters
+        ----------
+        shuffle : bool, optional
+            Shuffle the batches in this dataset if the iteration reaches the end
+            of the batch list. Defaults to True.
+
+        Returns
+        -------
+        batches : sequence of data batches
+            A sequence of batches---often from a training, validation, or test
+            dataset.
+        '''
         for _ in range(self.iteration_size):
-            self._index += 1
-            yield self.batches[self._index % k]
-        if update:
-            self.update()
+            if self._callable is not None:
+                yield self._callable()
+            else:
+                yield self._next_batch(shuffle)
 
-    def _iter_callable(self):
-        for _ in range(self.iteration_size):
-            yield self.batches()
-
-    def update(self):
-        if self._index >= len(self.batches):
-            self.shuffle()
+    def _next_batch(self, shuffle=True):
+        value = self._batches[self._index]
+        self._index += 1
+        if self._index >= len(self._batches):
+            if shuffle:
+                self.shuffle()
             self._index = 0
+        return value
