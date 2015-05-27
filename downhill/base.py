@@ -148,30 +148,40 @@ class Optimizer(Registrar(str('Base'), (), {})):
             self._monitor_names.append(name)
             self._monitor_exprs.append(monitor)
 
-    def compile(self):
+    def _compile(self):
         '''Compile the Theano functions for evaluating and updating our model.
         '''
         logging.info('compiling evaluation function')
         self.f_eval = theano.function(
             self.inputs, self._monitor_exprs, updates=self.updates)
         logging.info('compiling %s step function', self.__class__.__name__)
-        updates = list(self.updates) + list(self.optimization_updates())
+        updates = list(self.updates) + list(self._get_updates())
         self.f_step = theano.function(
             self.inputs, self._monitor_exprs, updates=updates)
 
-    def optimization_updates(self):
-        '''Compute updates for optimization.
+    def _get_updates(self):
+        '''Get parameter update expressions for performing optimization.
 
         Returns
         -------
         updates : sequence of (parameter, expression) tuples
             A sequence of parameter updates to be applied during optimization.
         '''
-        for param, grad in self.parameter_gradients():
-            for update in self.updates_for(param, grad):
+        for param, grad in self._differentiate():
+            for update in self._get_updates_for(param, grad):
                 yield update
 
-    def parameter_gradients(self, params=None):
+    def _get_updates_for(self, param, grad):
+        '''Generate some update pairs for the given model parameter.
+
+        Returns
+        -------
+        updates : sequence of (parameter, expression) tuples
+            A sequence of parameter updates to be applied during optimization.
+        '''
+        raise NotImplementedError
+
+    def _differentiate(self, params=None):
         '''Return a sequence of gradients for our parameters.
 
         This method applies gradient norm clipping, so if a gradient has a norm
@@ -209,7 +219,7 @@ class Optimizer(Registrar(str('Base'), (), {})):
         for param, target in zip(self.params, targets):
             param.set_value(target)
 
-    def log(self, monitors, iteration, label='', suffix=''):
+    def _log(self, monitors, iteration, label='', suffix=''):
         '''Log the state of the optimizer through the logging system.
 
         Parameters
@@ -255,7 +265,7 @@ class Optimizer(Registrar(str('Base'), (), {})):
         monitors = zip(self._monitor_names, np.mean(values, axis=0))
         return collections.OrderedDict(monitors)
 
-    def test_patience(self, monitors):
+    def _test_patience(self, monitors):
         '''Test whether our patience with optimization has elapsed.
 
         Parameters
@@ -278,10 +288,10 @@ class Optimizer(Registrar(str('Base'), (), {})):
             self._best_iter = self._curr_iter
             self._best_params = [p.get_value().copy() for p in self.params]
             marker = ' *'
-        self.log(monitors, self._curr_iter - 1, 'validation', marker)
+        self._log(monitors, self._curr_iter - 1, 'validation', marker)
         return self._curr_iter - self._best_iter > self.patience
 
-    def prepare(self, **kwargs):
+    def _prepare(self, **kwargs):
         '''Set up properties for optimization.
 
         This method can be overridden by base classes to provide parameters that
@@ -318,19 +328,21 @@ class Optimizer(Registrar(str('Base'), (), {})):
             dataset.
         '''
         self.patience = kwargs.get('patience', self.PATIENCE)
+        logging.info('-- patience = %s', self.patience)
         self.validate_every = kwargs.get('validate_every', self.VALIDATE_EVERY)
+        logging.info('-- validate_every = %s', self.validate_every)
         self.min_improvement = kwargs.get('min_improvement', self.MIN_IMPROVEMENT)
+        logging.info('-- min_improvement = %s', self.min_improvement)
         self.max_gradient_norm = as_float(
             kwargs.get('max_gradient_norm', self.MAX_GRADIENT_NORM))
+        logging.info('-- max_gradient_norm = %s', self.max_gradient_norm)
         self.gradient_clip = as_float(
             kwargs.get('gradient_clip', self.GRADIENT_CLIP))
-        logging.info('-- patience = %s', self.patience)
-        logging.info('-- min_improvement = %s', self.min_improvement)
-        logging.info('-- validate_every = %s', self.validate_every)
         logging.info('-- gradient_clip = %s', self.gradient_clip)
-        logging.info('-- max_gradient_norm = %s', self.max_gradient_norm)
-        self.prepare(**kwargs)
-        self.compile()
+
+        self._prepare(**kwargs)
+        self._compile()
+
         iteration = 0
         training = validation = None
         while True:
@@ -340,16 +352,16 @@ class Optimizer(Registrar(str('Base'), (), {})):
                 except KeyboardInterrupt:
                     logging.info('interrupted!')
                     break
-                if self.test_patience(validation):
+                if self._test_patience(validation):
                     logging.info('patience elapsed!')
                     break
             try:
-                training = self.step(train)
+                training = self._step(train)
             except KeyboardInterrupt:
                 logging.info('interrupted!')
                 break
             iteration += 1
-            self.log(training, iteration)
+            self._log(training, iteration)
             yield training, validation
         self.set_params(self._best_params)
 
@@ -382,7 +394,7 @@ class Optimizer(Registrar(str('Base'), (), {})):
             pass
         return monitors
 
-    def step(self, dataset):
+    def _step(self, dataset):
         '''Advance the state of the optimizer by one step.
 
         Parameters
