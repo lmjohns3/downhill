@@ -107,14 +107,20 @@ class Optimizer(Registrar(str('Base'), (), {})):
         mapping string names to Theano expressions.
     '''
 
-    # default values for patience-based early stopping.
     VALIDATE_EVERY = 10
-    MIN_IMPROVEMENT = 0
-    PATIENCE = 10
+    '''Default value for the ``validate_every`` parameter.'''
 
-    # default gradient-based optimization parameters.
+    MIN_IMPROVEMENT = 0
+    '''Default value for the ``min_improvement`` parameter.'''
+
+    PATIENCE = 10
+    '''Default value for the ``patience`` parameter.'''
+
     MAX_GRADIENT_NORM = 1000000
+    '''Default value for the ``max_gradient_norm`` parameter.'''
+
     GRADIENT_CLIP = 1000
+    '''Default value for the ``gradient_clip`` parameter.'''
 
     def __init__(self, loss, params, inputs, updates=(), monitors=()):
         self.loss = loss
