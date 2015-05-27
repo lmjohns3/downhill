@@ -249,7 +249,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         '''
         pass
 
-    def iteropt(self, train, valid, **kwargs):
+    def iteropt(self, train, valid=None, **kwargs):
         '''Optimize our loss iteratively using a training and validation dataset.
 
         This method yields a series of monitor values to the caller. After every
@@ -265,9 +265,10 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         ----------
         train : :class:`Dataset <downhill.dataset.Dataset>`
             A set of training data for computing updates to model parameters.
-        valid : :class:`Dataset <downhill.dataset.Dataset>`
+        valid : :class:`Dataset <downhill.dataset.Dataset>`, optional
             A set of validation data for computing monitor values and
-            determining when the loss has stopped improving.
+            determining when the loss has stopped improving. Defaults to the
+            training data.
 
         Returns
         -------
@@ -294,6 +295,8 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         self._prepare(**kwargs)
         self._compile()
 
+        if valid is None:
+            valid = train
         iteration = 0
         training = validation = None
         while True:
