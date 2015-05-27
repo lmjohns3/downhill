@@ -36,12 +36,6 @@ class SGD(Optimizer):
     surface.
     '''
 
-    def _prepare(self, **kwargs):
-        self.momentum = as_float(kwargs.get('momentum', 0.9))
-        self.learning_rate = as_float(kwargs.get('learning_rate', 1e-4))
-        logging.info('-- momentum = %s', self.momentum)
-        logging.info('-- learning_rate = %s', self.learning_rate)
-
     def _get_updates_for(self, param, grad):
         vel_tm1 = shared_like(param, 'vel')
         vel_t = self.momentum * vel_tm1 - self.learning_rate * grad
@@ -91,6 +85,10 @@ class NAG(SGD):
        importance of initialization and momentum in deep learning."
        http://jmlr.csail.mit.edu/proceedings/papers/v28/sutskever13.pdf
     '''
+
+    def _prepare(self, **kwargs):
+        super(NAG, self)._prepare(**kwargs)
+        self.nesterov = True
 
     def _get_updates_for(self, param, grad):
         # see https://github.com/lisa-lab/pylearn2/pull/136#issuecomment-10381617

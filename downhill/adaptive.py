@@ -9,15 +9,15 @@ import theano.tensor as TT
 
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 
+from .base import Optimizer
 from .util import as_float, shared_like
-from .first_order import SGD
 
 logging = climate.get_logger(__name__)
 
 __all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD']
 
 
-class RProp(SGD):
+class RProp(Optimizer):
     r'''Optimization algorithm using resilient backpropagation.
 
     The RProp method uses the same general strategy as SGD (both methods are
@@ -61,20 +61,25 @@ class RProp(SGD):
     zero in cases where the previous and current gradients have switched signs.
     '''
 
-    def _prepare(self, **kwargs):
-        self.step_increase = as_float(kwargs.get('rprop_increase', 1.01))
-        self.step_decrease = as_float(kwargs.get('rprop_decrease', 0.99))
-        self.min_step = as_float(kwargs.get('rprop_min_step', 0.))
-        self.max_step = as_float(kwargs.get('rprop_max_step', 100.))
-        logging.info('-- rprop_increase = %s', self.step_increase)
-        logging.info('-- rprop_decrease = %s', self.step_decrease)
-        logging.info('-- rprop_min_step = %s', self.min_step)
-        logging.info('-- rprop_max_step = %s', self.max_step)
+    def _prepare(self,
+                 rprop_increase=1.01,
+                 rprop_decrease=0.99,
+                 rprop_min_step=0,
+                 rprop_max_step=100,
+                 **kwargs):
+        self.step_increase = as_float(rprop_increase)
+        self.step_decrease = as_float(rprop_decrease)
+        self.min_step = as_float(rprop_min_step)
+        self.max_step = as_float(rprop_max_step)
+        logging.info('-- rprop_increase = %s', rprop_increase)
+        logging.info('-- rprop_decrease = %s', rprop_decrease)
+        logging.info('-- rprop_min_step = %s', rprop_min_step)
+        logging.info('-- rprop_max_step = %s', rprop_max_step)
         super(RProp, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
         grad_tm1 = shared_like(param, 'grad')
-        step_tm1 = shared_like(param, 'step', self.learning_rate.value)
+        step_tm1 = shared_like(param, 'step', self.learning_rate)
         test = grad * grad_tm1
         same = TT.gt(test, 0)
         diff = TT.lt(test, 0)
@@ -88,7 +93,7 @@ class RProp(SGD):
         yield step_tm1, step
 
 
-class RMSProp(SGD):
+class RMSProp(Optimizer):
     r'''RMSProp optimizes scalar losses using scaled gradient steps.
 
     The RMSProp method uses the same general strategy as all first-order

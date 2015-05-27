@@ -63,21 +63,6 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         mapping string names to Theano expressions.
     '''
 
-    VALIDATE_EVERY = 10
-    '''Default value for the ``validate_every`` parameter.'''
-
-    MIN_IMPROVEMENT = 0
-    '''Default value for the ``min_improvement`` parameter.'''
-
-    PATIENCE = 10
-    '''Default value for the ``patience`` parameter.'''
-
-    MAX_GRADIENT_NORM = 1000000
-    '''Default value for the ``max_gradient_norm`` parameter.'''
-
-    GRADIENT_CLIP = 1000
-    '''Default value for the ``gradient_clip`` parameter.'''
-
     def __init__(self, loss, params, inputs, updates=(), monitors=()):
         self.loss = loss
         self.params = params
@@ -162,7 +147,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             norm = TT.sqrt((grad * grad).sum())
             yield param, TT.clip(
                 grad * TT.minimum(1, self.max_gradient_norm / norm),
-                -self.gradient_clip, self.gradient_clip)
+                -self.max_gradient_clip, self.max_gradient_clip)
 
     def set_params(self, targets):
         '''Set the values of the parameters to the given target values.
@@ -249,7 +234,18 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         '''
         pass
 
-    def iteropt(self, train, valid=None, **kwargs):
+    def iteropt(self,
+                train,
+                valid=None,
+                patience=5,
+                validate_every=10,
+                min_improvement=0,
+                max_gradient_norm=1e10,
+                max_gradient_clip=1e10,
+                learning_rate=1e-4,
+                momentum=0.9,
+                nesterov=True,
+                **kwargs):
         '''Optimize our loss iteratively using a training and validation dataset.
 
         This method yields a series of monitor values to the caller. After every
@@ -269,6 +265,39 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             A set of validation data for computing monitor values and
             determining when the loss has stopped improving. Defaults to the
             training data.
+        patience : int, optional
+            Number of validation "failures" that we are willing to tolerate
+            before stopping the optimization process. A validation failure
+            happens whenever the loss on the validation dataset decreases by
+            less than ``min_improvement`` (relative) over the previous best
+            validation loss. Defaults to 5.
+        validate_every : int, optional
+            Evaluate the loss on the validation dataset after making this many
+            passes over the training data. Defaults to 10.
+        min_improvement : float, optional
+            Insist that the validation loss must improve by this relative amount
+            before considering that the optimization has made progress. The
+            optimization process halts when ``patience`` validations have failed
+            to make this relative improvement. Defaults to 0; set to a larger
+            value (e.g., 0.01 for 1% improvement) to halt the optimization
+            process sooner.
+        max_gradient_norm : float, optional
+            Rescale each parameter's gradient so that it has at most this L2
+            norm. Defaults to 1e10, i.e., very little rescaling.
+        max_gradient_clip : float, optional
+            Perform elementwise clipping on gradient values (this happens after
+            rescaling). Defaults to 1e10, i.e., very little clipping.
+        learning_rate : float, optional
+            Many SGD-based optimization algorithms require a learning rate
+            hyperparameter that scales the gradient step. Defaults to 1e-4.
+        momentum : float, optional
+            Apply momentum to the parameter updates for this optimizer, with the
+            given strength. Typically this value ranges from 0 (no momentum) to
+            1 - epsilon (large momentum). Defaults to 0.9. Set to 0 to disable.
+        nesterov : bool, optional
+            If True, and momentum is nonzero, apply Nesterov-style momentum to
+            parameter updates for this optimizer. Defaults to True. Set to False
+            to apply "regular" momentum.
 
         Returns
         -------
@@ -279,18 +308,22 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             A dictionary containing monitor values evaluated on the validation
             dataset.
         '''
-        self.patience = kwargs.get('patience', self.PATIENCE)
-        logging.info('-- patience = %s', self.patience)
-        self.validate_every = kwargs.get('validate_every', self.VALIDATE_EVERY)
-        logging.info('-- validate_every = %s', self.validate_every)
-        self.min_improvement = kwargs.get('min_improvement', self.MIN_IMPROVEMENT)
-        logging.info('-- min_improvement = %s', self.min_improvement)
-        self.max_gradient_norm = util.as_float(
-            kwargs.get('max_gradient_norm', self.MAX_GRADIENT_NORM))
-        logging.info('-- max_gradient_norm = %s', self.max_gradient_norm)
-        self.gradient_clip = util.as_float(
-            kwargs.get('gradient_clip', self.GRADIENT_CLIP))
-        logging.info('-- gradient_clip = %s', self.gradient_clip)
+        self.patience = patience
+        logging.info('-- patience = %s', patience)
+        self.validate_every = validate_every
+        logging.info('-- validate_every = %s', validate_every)
+        self.min_improvement = min_improvement
+        logging.info('-- min_improvement = %s', min_improvement)
+        self.max_gradient_norm = max_gradient_norm
+        logging.info('-- max_gradient_norm = %s', max_gradient_norm)
+        self.max_gradient_clip = max_gradient_clip
+        logging.info('-- max_gradient_clip = %s', max_gradient_clip)
+        self.learning_rate = learning_rate
+        logging.info('-- learning_rate = %s', learning_rate)
+        self.momentum = momentum
+        logging.info('-- momentum = %s', momentum)
+        self.nesterov = nesterov
+        logging.info('-- nesterov = %s', nesterov)
 
         self._prepare(**kwargs)
         self._compile()
