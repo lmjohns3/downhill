@@ -16,9 +16,12 @@ def build_rosen(algo):
 
 
 def build_factor(algo):
+    a = np.arange(1000).reshape((100, 10)).astype('f')
+    b = 0.1 + np.zeros((10, 100), 'f')
+
     x = TT.matrix('x')
-    u = theano.shared(np.arange(1000).reshape((100, 10)).astype('f'), name='u')
-    v = theano.shared(0.2 + np.zeros((10, 100), 'f'), name='v')
+    u = theano.shared(a, name='u')
+    v = theano.shared(0.1 + b, name='v')
     return downhill.build(
         algo,
         loss=TT.sum(TT.sqr(x - TT.dot(u, v))),
@@ -29,8 +32,8 @@ def build_factor(algo):
             ('u<-1', (u < -1).mean()),
             ('v<1', (v < 1).mean()),
             ('v<-1', (v < -1).mean()),
-        ]), [np.dot(np.arange(1000).reshape((100, 10)).astype('f'),
-                    0.1 + np.zeros((10, 100), 'f'))[None, :, :]]
+        ]), [[np.dot(a, b) + np.random.randn(100, 100).astype('f')]
+             for _ in range(10)]
 
 
 def assert_progress(opt, train, valid=None, **kwargs):

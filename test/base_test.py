@@ -49,7 +49,7 @@ class TestOptimizer:
         # run the optimizer for two iterations. check that the u and v values
         # (being monitored) are reasonable at the start.
         for i, (tm, vm) in enumerate(opt.iteropt(train)):
-            assert vm['u<1'] == 0.001
+            assert abs(vm['u<1'] - 0.001) < 1e-5
             assert vm['u<-1'] == 0
             assert vm['v<1'] == 1
             assert vm['v<-1'] == 0
