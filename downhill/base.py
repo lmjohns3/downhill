@@ -79,11 +79,15 @@ class Registrar(type):
     def build(cls, key, *args, **kwargs):
         return cls._registry[key.lower()](*args, **kwargs)
 
-Base = Registrar(str('Base'), (), {})
+    def get_class(cls, key):
+        return cls._registry[key.lower()]
+
+    def is_registered(cls, key):
+        return key.lower() in cls._registry
 
 
-class Optimizer(Base):
-    '''An optimizer computes gradient updates to optimize a loss.
+class Optimizer(Registrar(str('Base'), (), {})):
+    '''An optimizer computes gradient updates to iteratively optimize a loss.
 
     Parameters
     ----------
