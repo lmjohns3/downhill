@@ -294,11 +294,13 @@ class Optimizer(Registrar(str('Base'), (), {})):
         pass
 
     def iteropt(self, train, valid, **kwargs):
-        '''Optimize our loss using a training and validation dataset.
+        '''Optimize our loss iteratively using a training and validation dataset.
 
         This method yields a series of monitor values to the caller. After every
-        iteration, a pair of monitor dictionaries is generated: one evaluated on
-        the training dataset, and another evaluated on the validation dataset.
+        optimization epoch, a pair of monitor dictionaries is generated: one
+        evaluated on the training dataset during the epoch, and another
+        evaluated on the validation dataset at the most recent validation epoch.
+
         The validation monitors might not be updated during every optimization
         iteration; in this case, the most recent validation monitors will be
         yielded along with the training monitors.
