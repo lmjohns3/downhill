@@ -6,7 +6,7 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from .util import as_float
+from . import util
 
 logging = climate.get_logger(__name__)
 
@@ -31,27 +31,7 @@ def build(method, *args, **kwargs):
     return Optimizer.build(method, *args, **kwargs)
 
 
-class Registrar(type):
-    '''A metaclass that builds a registry of its subclasses.'''
-
-    def __init__(cls, name, bases, dct):
-        if not hasattr(cls, '_registry'):
-            cls._registry = {}
-        else:
-            cls._registry[name.lower()] = cls
-        super(Registrar, cls).__init__(name, bases, dct)
-
-    def build(cls, key, *args, **kwargs):
-        return cls._registry[key.lower()](*args, **kwargs)
-
-    def get_class(cls, key):
-        return cls._registry[key.lower()]
-
-    def is_registered(cls, key):
-        return key.lower() in cls._registry
-
-
-class Optimizer(Registrar(str('Base'), (), {})):
+class Optimizer(util.Registrar(str('Base'), (), {})):
     '''An optimizer computes gradient updates to iteratively optimize a loss.
 
     Parameters
@@ -293,10 +273,10 @@ class Optimizer(Registrar(str('Base'), (), {})):
         logging.info('-- validate_every = %s', self.validate_every)
         self.min_improvement = kwargs.get('min_improvement', self.MIN_IMPROVEMENT)
         logging.info('-- min_improvement = %s', self.min_improvement)
-        self.max_gradient_norm = as_float(
+        self.max_gradient_norm = util.as_float(
             kwargs.get('max_gradient_norm', self.MAX_GRADIENT_NORM))
         logging.info('-- max_gradient_norm = %s', self.max_gradient_norm)
-        self.gradient_clip = as_float(
+        self.gradient_clip = util.as_float(
             kwargs.get('gradient_clip', self.GRADIENT_CLIP))
         logging.info('-- gradient_clip = %s', self.gradient_clip)
 

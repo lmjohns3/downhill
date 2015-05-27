@@ -7,6 +7,26 @@ import theano
 import theano.tensor as TT
 
 
+class Registrar(type):
+    '''A metaclass that builds a registry of its subclasses.'''
+
+    def __init__(cls, name, bases, dct):
+        if not hasattr(cls, '_registry'):
+            cls._registry = {}
+        else:
+            cls._registry[name.lower()] = cls
+        super(Registrar, cls).__init__(name, bases, dct)
+
+    def build(cls, key, *args, **kwargs):
+        return cls._registry[key.lower()](*args, **kwargs)
+
+    def get_class(cls, key):
+        return cls._registry[key.lower()]
+
+    def is_registered(cls, key):
+        return key.lower() in cls._registry
+
+
 def shared_like(param, suffix, init=0):
     '''Create a Theano shared variable like an existing parameter.
 
