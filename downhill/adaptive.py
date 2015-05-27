@@ -12,6 +12,8 @@ from .first_order import SGD
 
 logging = climate.get_logger(__name__)
 
+__all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD']
+
 
 class RProp(SGD):
     r'''Trainer for neural nets using resilient backpropagation.

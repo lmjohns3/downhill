@@ -8,6 +8,8 @@ from .base import Optimizer, as_float, shared_like
 
 logging = climate.get_logger(__name__)
 
+__all__ = ['SGD', 'NAG']
+
 
 class SGD(Optimizer):
     r'''Optimize using stochastic gradient descent with momentum.
