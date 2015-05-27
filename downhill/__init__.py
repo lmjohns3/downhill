@@ -5,7 +5,7 @@ from .first_order import *
 
 
 def minimize(loss, params, inputs, train, valid,
-             method='rmsprop', updates=(), monitors=(),
+             algo='rmsprop', updates=(), monitors=(),
              batch_size=32, train_batches=None, valid_batches=None,
              **kwargs):
     '''Minimize a loss function with respect to some symbolic parameters.
@@ -22,9 +22,9 @@ def minimize(loss, params, inputs, train, valid,
         Dataset to use for computing gradient updates.
     valid : :class:`Dataset`, ndarray, or callable
         Dataset to use for validating the minimization process.
-    method : str, optional
-        Name of the minimization method to use. Must be one of the strings that
-        can be passed to :func:`build`. Defaults to ``'rmsprop'``.
+    algo : str, optional
+        Name of the minimization algorithm to use. Must be one of the strings
+        that can be passed to :func:`build`. Defaults to ``'rmsprop'``.
     updates : list of update pairs, optional
         A list of pairs providing updates for the internal of the loss
         computation. Normally this is empty, but it can be provided if the loss,
@@ -72,9 +72,11 @@ def minimize(loss, params, inputs, train, valid,
             batch_size=batch_size,
             iteration_size=valid_batches,
         )
-    return build(method,
-                 loss=loss,
-                 params=params,
-                 inputs=inputs,
-                 updates=updates,
-                 monitors=monitors).minimize(train, valid, **kwargs)
+    return build(
+        method,
+        loss=loss,
+        params=params,
+        inputs=inputs,
+        updates=updates,
+        monitors=monitors
+    ).minimize(train, valid, **kwargs)
