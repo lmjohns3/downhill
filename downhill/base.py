@@ -11,24 +11,35 @@ from . import util
 logging = climate.get_logger(__name__)
 
 
-def build(method, *args, **kwargs):
+def build(algo, loss, params, inputs, updates=(), monitors=()):
     '''Construct an optimizer by name.
 
     Parameters
     ----------
-    method : str
-        The name of the optimizer to build.
-    args : tuple
-        Positional arguments to pass to the optimizer constructor.
-    kwargs : dict
-        Named arguments to pass to the optimizer constructor.
+    algo : str
+        The name of the optimization algorithm to build.
+    loss : Theano expression
+        Loss function to minimize. This must be a scalar-valued expression.
+    params : list of Theano variables
+        Symbolic variables to adjust to minimize the loss.
+    inputs : list of Theano variables
+        Symbolic variables required to compute the loss.
+    updates : list of update pairs, optional
+        A list of pairs providing updates for the internal of the loss
+        computation. Normally this is empty, but it can be provided if the loss,
+        for example, requires an update to an internal random number generator.
+    monitors : dict or sequence of (str, Theano expression) tuples, optional
+        Additional values to monitor during optimization. These must be provided
+        as either a sequence of (name, expression) tuples, or as a dictionary
+        mapping string names to Theano expressions.
 
     Returns
     -------
     optimizer : :class:`Optimizer`
         An optimizer instance.
     '''
-    return Optimizer.build(method, *args, **kwargs)
+    return Optimizer.build(algo, loss, params, inputs,
+                           updates=updates, monitors=monitors)
 
 
 class Optimizer(util.Registrar(str('Base'), (), {})):
