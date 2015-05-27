@@ -16,7 +16,7 @@ __all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD']
 
 
 class RProp(SGD):
-    r'''Trainer for neural nets using resilient backpropagation.
+    r'''Optimization algorithm using resilient backpropagation.
 
     The RProp method uses the same general strategy as SGD (both methods are
     make small parameter adjustments using local derivative information). The
@@ -84,16 +84,18 @@ class RProp(SGD):
 
 
 class RMSProp(SGD):
-    r'''RMSProp trains neural network models using scaled SGD.
+    r'''RMSProp optimizes scalar losses using scaled gradient steps.
 
-    The RMSProp method uses the same general strategy as SGD, in the sense that
-    all gradient-based methods make small parameter adjustments using local
-    derivative information. The difference here is that as gradients are
-    computed during each parameter update, an exponential moving average of
-    gradient magnitudes is maintained as well. At each update, the EWMA is used
-    to compute the root-mean-square (RMS) gradient value that's been seen in the
-    recent past. The actual gradient is normalized by this RMS scaling factor
-    before being applied to update the parameters.
+    The RMSProp method uses the same general strategy as all first-order
+    stochastic gradient methods, in the sense that these methods make small
+    parameter adjustments iteratively using local derivative information.
+
+    The difference here is that as gradients are computed during each parameter
+    update, an exponential moving average of gradient magnitudes is maintained
+    as well. At each update, the EWMA is used to compute the root-mean-square
+    (RMS) gradient value that's been seen in the recent past. The actual
+    gradient is normalized by this RMS scaling factor before being applied to
+    update the parameters.
 
     .. math::
         \begin{eqnarray*}
@@ -107,10 +109,14 @@ class RMSProp(SGD):
     parameter-specific momentum value, but this method takes into account both
     the sign and the magnitude of the gradient for each parameter.
 
-    In this implementation, :math:`\epsilon = 1e-4`, and the weight parameter
-    :math:`\gamma` for the EWMA window is computed from the ``rms_halflife``
-    keyword argument, such that the actual EWMA weight varies inversely with the
-    halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln 2}{h}}`.
+    In this algorithm, RMS values are regularized (made less extreme) by
+    :math:`\epsilon`, which is specified using the ``rms_regularizer`` keyword
+    argument.
+
+    The weight parameter :math:`\gamma` for the EWMA window is computed from the
+    ``rms_halflife`` keyword argument, such that the actual EWMA weight varies
+    inversely with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln
+    2}{h}}`.
 
     The implementation here is taken from Graves, "Generating Sequences With
     Recurrent Neural Networks" (2013), equations (38)--(45); the paper is
@@ -122,18 +128,19 @@ class RMSProp(SGD):
 
     def prepare(self, **kwargs):
         halflife = kwargs.get('rms_halflife', 7)
-        logging.info('-- rms_halflife = %s', halflife)
         self.ewma = as_float(np.exp(-np.log(2) / halflife))
+        self.epsilon = as_float(kwargs.get('rms_regularizer', 1e-8))
+        logging.info('-- rms_halflife = %s', halflife)
+        logging.info('-- rms_regularizer = %s', self.epsilon.eval())
         super(RMSProp, self).prepare(**kwargs)
 
     def updates_for(self, param, grad):
-        eps = 1e-4
         g1_tm1 = shared_like(param, 'g1_ewma')
         g2_tm1 = shared_like(param, 'g2_ewma')
         vel_tm1 = shared_like(param, 'vel')
         g1_t = self.ewma * g1_tm1 + (1 - self.ewma) * grad
         g2_t = self.ewma * g2_tm1 + (1 - self.ewma) * grad * grad
-        rms = TT.sqrt(g2_t - g1_t * g1_t + eps)
+        rms = TT.sqrt(g2_t - g1_t * g1_t + self.epsilon)
         vel_t = self.momentum * vel_tm1 - grad * self.learning_rate / rms
         yield g1_tm1, g1_t
         yield g2_tm1, g2_t
@@ -142,7 +149,7 @@ class RMSProp(SGD):
 
 
 class ADADELTA(RMSProp):
-    r'''ADADELTA trains neural network models using scaled :class:`SGD`.
+    r'''ADADELTA optimizes scalar losses scaled stochastic gradient steps.
 
     The ADADELTA method uses the same general strategy as :class:`SGD` (both
     methods are make small parameter adjustments using local derivative
