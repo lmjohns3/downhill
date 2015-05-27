@@ -4,7 +4,8 @@
 
 import climate
 
-from .base import Optimizer, as_float, shared_like
+from .base import Optimizer
+from .util import as_float, shared_like
 
 logging = climate.get_logger(__name__)
 

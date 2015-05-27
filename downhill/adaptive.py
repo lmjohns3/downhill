@@ -7,7 +7,7 @@ import climate
 import numpy as np
 import theano.tensor as TT
 
-from .base import as_float, shared_like
+from .util import as_float, shared_like
 from .first_order import SGD
 
 logging = climate.get_logger(__name__)
