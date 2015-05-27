@@ -38,12 +38,15 @@ class RProp(SGD):
 
     .. math::
         \begin{eqnarray*}
-        && \mbox{if } \frac{\partial\mathcal{L}}{\partial p}_{t-1}\frac{\partial\mathcal{L}}{\partial p} > 0 \\
+        && \mbox{if } \frac{\partial\mathcal{L}}{\partial p}_{t-1}
+           \frac{\partial\mathcal{L}}{\partial p} > 0 \\
         && \qquad \Delta_t = \min (\eta_+\Delta_{t−1}, \Delta_+) \\
-        && \mbox{if } \frac{\partial\mathcal{L}}{\partial p}_{t-1}\frac{\partial\mathcal{L}}{\partial p} < 0 \\
+        && \mbox{if } \frac{\partial\mathcal{L}}{\partial p}_{t-1}
+           \frac{\partial\mathcal{L}}{\partial p} < 0 \\
         && \qquad \Delta_t = \max (\eta_-\Delta_{t−1}, \Delta_-) \\
         && \qquad \frac{\partial\mathcal{L}}{\partial p} = 0 \\
-        && p_{t+1} = p_t − \mbox{sgn}\left(\frac{\partial\mathcal{L}}{\partial p}\right) \Delta_t
+        && p_{t+1} = p_t − \mbox{sgn}\left(
+           \frac{\partial\mathcal{L}}{\partial p}\right) \Delta_t
         \end{eqnarray*}
 
     Here, :math:`s(\cdot)` is the sign function (i.e., returns -1 if its
@@ -102,8 +105,10 @@ class RMSProp(SGD):
     .. math::
         \begin{eqnarray*}
         f_{t+1} &=& \gamma a_t + (1 - \gamma) \frac{\partial\mathcal{L}}{\partial p} \\
-        g_{t+1} &=& \gamma g_t + (1 - \gamma) \left(\frac{\partial\mathcal{L}}{\partial p}\right)^2 \\
-        v_{t+1} &=& \mu v_t - \frac{\alpha}{\sqrt{g_{t+1} - f_{t+1}^2 + \epsilon}} \frac{\partial\mathcal{L}}{\partial p} \\
+        g_{t+1} &=& \gamma g_t + (1 - \gamma) \left(
+           \frac{\partial\mathcal{L}}{\partial p}\right)^2 \\
+        v_{t+1} &=& \mu v_t - \frac{\alpha}{\sqrt{g_{t+1} - f_{t+1}^2 + \epsilon}}
+           \frac{\partial\mathcal{L}}{\partial p} \\
         p_{t+1} &=& p_t + v_{t+1}
         \end{eqnarray*}
 
@@ -163,8 +168,10 @@ class ADADELTA(RMSProp):
 
     .. math::
         \begin{eqnarray*}
-        g_{t+1} &=& \gamma g_t + (1 - \gamma) \left(\frac{\partial\mathcal{L}}{\partial p}\right)^2 \\
-        v_{t+1} &=& -\frac{\sqrt{x_t + \epsilon}}{\sqrt{g_{t+1} + \epsilon}} \frac{\partial\mathcal{L}}{\partial p} \\
+        g_{t+1} &=& \gamma g_t + (1 - \gamma) \left(
+           \frac{\partial\mathcal{L}}{\partial p}\right)^2 \\
+        v_{t+1} &=& -\frac{\sqrt{x_t + \epsilon}}{\sqrt{g_{t+1} + \epsilon}}
+           \frac{\partial\mathcal{L}}{\partial p} \\
         x_{t+1} &=& \gamma x_t + (1 - \gamma) v_{t+1}^2 \\
         p_{t+1} &=& p_t + v_{t+1}
         \end{eqnarray*}
@@ -214,7 +221,8 @@ class ESGD(RMSProp):
         r &\sim& \mathcal{N}(0, 1) \\
         Hr &=& \frac{\partial^2 \mathcal{L}}{\partial^2 p}r \\
         D_{t+1} &=& \gamma D_t + (1 - \gamma) (Hr)^2 \\
-        v_{t+1} &=& \mu v_t - \frac{\alpha}{\sqrt{D_{t+1} + \epsilon}} \frac{\partial\mathcal{L}}{\partial p} \\
+        v_{t+1} &=& \mu v_t - \frac{\alpha}{\sqrt{D_{t+1} + \epsilon}}
+           \frac{\partial\mathcal{L}}{\partial p} \\
         p_{t+1} &=& p_t + v_{t+1}
         \end{eqnarray*}
 

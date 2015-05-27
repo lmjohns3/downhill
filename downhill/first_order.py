@@ -72,7 +72,8 @@ class NAG(SGD):
 
     .. math::
         \begin{eqnarray*}
-        v_{t+1} &=& \mu v_t - \alpha \left.\frac{\partial\mathcal{L}}{\partial p}\right|_{p_t + \mu v_t} \\
+        v_{t+1} &=& \mu v_t - \alpha \left.
+           \frac{\partial\mathcal{L}}{\partial p}\right|_{p_t + \mu v_t} \\
         p_{t+1} &=& p_t + v_{t+1}
         \end{eqnarray*}
 
