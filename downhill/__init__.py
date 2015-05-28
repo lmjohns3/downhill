@@ -74,7 +74,7 @@ def minimize(loss, params, inputs, train, valid=None,
             iteration_size=valid_batches,
         )
     return build(
-        method,
+        algo,
         loss=loss,
         params=params,
         inputs=inputs,
