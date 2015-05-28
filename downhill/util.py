@@ -62,3 +62,19 @@ def as_float(x):
         A symbolic variable cast as a ``floatX`` value.
     '''
     return TT.cast(x, theano.config.floatX)
+
+
+def as_float32(x):
+    '''Cast a floating point value to a 32-bit numpy float.
+
+    Parameters
+    ----------
+    x : float
+        A value to cast to floating point.
+
+    Returns
+    -------
+    x : np.float32
+        The given value as a 32-bit float.
+    '''
+    return np.float32(x)
