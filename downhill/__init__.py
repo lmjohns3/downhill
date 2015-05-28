@@ -4,7 +4,7 @@ from .dataset import Dataset
 from .first_order import *
 
 
-def minimize(loss, params, inputs, train, valid,
+def minimize(loss, params, inputs, train, valid=None,
              algo='rmsprop', updates=(), monitors=(),
              batch_size=32, train_batches=None, valid_batches=None,
              **kwargs):
@@ -20,8 +20,9 @@ def minimize(loss, params, inputs, train, valid,
         Symbolic variables required to compute the loss.
     train : :class:`Dataset`, ndarray, or callable
         Dataset to use for computing gradient updates.
-    valid : :class:`Dataset`, ndarray, or callable
-        Dataset to use for validating the minimization process.
+    valid : :class:`Dataset`, ndarray, or callable, optional
+        Dataset to use for validating the minimization process. The training
+        dataset is used if this is not provided.
     algo : str, optional
         Name of the minimization algorithm to use. Must be one of the strings
         that can be passed to :func:`build`. Defaults to ``'rmsprop'``.
@@ -65,7 +66,7 @@ def minimize(loss, params, inputs, train, valid,
             batch_size=batch_size,
             iteration_size=train_batches,
         )
-    if not isinstance(valid, Dataset):
+    if valid is not None and not isinstance(valid, Dataset):
         valid = Dataset(
             valid,
             name='valid',
