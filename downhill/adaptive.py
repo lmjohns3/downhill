@@ -79,14 +79,13 @@ class RProp(Optimizer):
 
     def _get_updates_for(self, param, grad):
         grad_tm1 = shared_like(param, 'grad')
-        step_tm1 = shared_like(param, 'step', self.learning_rate)
+        step_tm1 = shared_like(param, 'step', self.learning_rate.eval())
         test = grad * grad_tm1
-        same = TT.gt(test, 0)
         diff = TT.lt(test, 0)
-        step = TT.minimum(self.max_step, TT.maximum(self.min_step, step_tm1 * (
-            TT.eq(test, 0) +
-            same * self.step_increase +
-            diff * self.step_decrease)))
+        steps = step_tm1 * (TT.eq(test, 0) +
+                            TT.gt(test, 0) * self.step_increase +
+                            diff * self.step_decrease)
+        step = TT.minimum(self.max_step, TT.maximum(self.min_step, steps))
         grad = grad - diff * grad
         yield param, param - TT.sgn(grad) * step
         yield grad_tm1, grad
