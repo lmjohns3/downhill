@@ -109,8 +109,19 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             A sequence of parameter updates to be applied during optimization.
         '''
         for param, grad in self._differentiate():
-            for update in self._get_updates_for(param, grad):
-                yield update
+            for var, expr in self._get_updates_for(param, grad):
+                if self.momentum == 0 or var != param:
+                    yield var, expr
+                    continue
+                delta = expr - param
+                vel_tm1 = util.shared_like(param, 'vel')
+                vel_t = self.momentum * vel_tm1 + delta
+                yield vel_tm1, vel_t
+                if self.nesterov:
+                    # https://github.com/lisa-lab/pylearn2/pull/136#issuecomment-10381617
+                    yield param, param + self.momentum * vel_t + delta
+                else:
+                    yield param, param + vel_t
 
     def _get_updates_for(self, param, grad):
         '''Generate some update pairs for the given model parameter.
@@ -313,10 +324,10 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         self.patience = patience
         self.validate_every = validate_every
         self.min_improvement = min_improvement
-        self.max_gradient_norm = max_gradient_norm
-        self.max_gradient_clip = max_gradient_clip
-        self.learning_rate = learning_rate
-        self.momentum = momentum
+        self.max_gradient_norm = util.as_float(max_gradient_norm)
+        self.max_gradient_clip = util.as_float(max_gradient_clip)
+        self.learning_rate = util.as_float(learning_rate)
+        self.momentum = util.as_float(momentum)
         self.nesterov = nesterov
         logging.info('-- patience = %s', patience)
         logging.info('-- validate_every = %s', validate_every)

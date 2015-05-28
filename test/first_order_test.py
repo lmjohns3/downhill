@@ -6,7 +6,15 @@ class TestSGD:
         util.assert_progress(*util.build_rosen('sgd'))
 
     def test_factor(self):
-        util.assert_progress(*util.build_factor('sgd'), learning_rate=0.00001)
+        util.assert_progress(
+            *util.build_factor('sgd'),
+            max_gradient_clip=1,
+            nesterov=False)
+
+    def test_factor_nesterov(self):
+        util.assert_progress(
+            *util.build_factor('sgd'),
+            max_gradient_clip=1)
 
 
 class TestNAG:
@@ -14,4 +22,4 @@ class TestNAG:
         util.assert_progress(*util.build_rosen('nag'))
 
     def test_factor(self):
-        util.assert_progress(*util.build_factor('nag'), learning_rate=0.00001)
+        util.assert_progress(*util.build_factor('nag'), max_gradient_clip=1)

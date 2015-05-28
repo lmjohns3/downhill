@@ -138,26 +138,22 @@ class RMSProp(Optimizer):
     values.
     '''
 
-    def _prepare(self, **kwargs):
-        halflife = kwargs.get('rms_halflife', 7)
-        self.ewma = as_float(np.exp(-np.log(2) / halflife))
-        self.epsilon = as_float(kwargs.get('rms_regularizer', 1e-8))
-        logging.info('-- rms_halflife = %s', halflife)
-        logging.info('-- rms_regularizer = %s', self.epsilon.eval())
+    def _prepare(self, rms_halflife=14, rms_regularizer=1e-8, **kwargs):
+        self.ewma = as_float(np.exp(-np.log(2) / rms_halflife))
+        self.epsilon = as_float(rms_regularizer)
+        logging.info('-- rms_halflife = %s', rms_halflife)
+        logging.info('-- rms_regularizer = %s', rms_regularizer)
         super(RMSProp, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
         g1_tm1 = shared_like(param, 'g1_ewma')
         g2_tm1 = shared_like(param, 'g2_ewma')
-        vel_tm1 = shared_like(param, 'vel')
         g1_t = self.ewma * g1_tm1 + (1 - self.ewma) * grad
         g2_t = self.ewma * g2_tm1 + (1 - self.ewma) * grad * grad
         rms = TT.sqrt(g2_t - g1_t * g1_t + self.epsilon)
-        vel_t = self.momentum * vel_tm1 - grad * self.learning_rate / rms
         yield g1_tm1, g1_t
         yield g2_tm1, g2_t
-        yield vel_tm1, vel_t
-        yield param, param + vel_t
+        yield param, param - self.learning_rate * grad / rms
 
 
 class ADADELTA(RMSProp):
@@ -187,7 +183,8 @@ class ADADELTA(RMSProp):
     that ADADELTA additionally incorporates a sliding window of RMS parameter
     steps, obviating the need for a learning rate parameter.
 
-    In this implementation, :math:`\epsilon` is set to 1e-4. The weight
+    In this implementation, :math:`\epsilon` is specified using the
+    ``rms_regularizer`` parameter. The weight
     parameter :math:`\gamma` for the EWMA window is computed from the
     ``rms_halflife`` keyword argument, such that the actual EWMA weight varies
     inversely with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln
@@ -198,11 +195,10 @@ class ADADELTA(RMSProp):
     '''
 
     def _get_updates_for(self, param, grad):
-        eps = 1e-4
         x2_tm1 = shared_like(param, 'x2_ewma')
         g2_tm1 = shared_like(param, 'g2_ewma')
         g2_t = self.ewma * g2_tm1 + (1 - self.ewma) * grad * grad
-        delta = grad * TT.sqrt(x2_tm1 + eps) / TT.sqrt(g2_t + eps)
+        delta = grad * TT.sqrt(x2_tm1 + self.epsilon) / TT.sqrt(g2_t + self.epsilon)
         x2_t = self.ewma * x2_tm1 + (1 - self.ewma) * delta * delta
         yield g2_tm1, g2_t
         yield x2_tm1, x2_t
@@ -241,11 +237,11 @@ class ESGD(RMSProp):
     below) is the use of an EWMA to decay the diagonal values over time, while
     in the paper the diagonal is divided by the training iteration.
 
-    In this implementation, :math:`\epsilon` is set to 1e-4. The weight
-    parameter :math:`\gamma` for the EWMA window is computed from the
-    ``rms_halflife`` keyword argument, such that the actual EWMA weight varies
-    inversely with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln
-    2}{h}}`.
+    In this implementation, :math:`\epsilon` is specified using the
+    ``rms_regularizer`` parameter. The weight parameter :math:`\gamma` for the
+    EWMA window is computed from the ``rms_halflife`` keyword argument, such
+    that the actual EWMA weight varies inversely with the halflife :math:`h`:
+    :math:`\gamma = e^{\frac{-\ln 2}{h}}`.
 
     The implementation here is modeled after Dauphin, de Vries, Chung & Bengio
     (2014), "RMSProp and equilibrated adaptive learning rates for non-convex
@@ -257,11 +253,8 @@ class ESGD(RMSProp):
         super(ESGD, self).__init__(*args, **kwargs)
 
     def _get_updates_for(self, param, grad):
-        eps = 1e-4  # more or less from the paper
         D_tm1 = shared_like(param, 'D_ewma')
-        vel_tm1 = shared_like(param, 'vel')
         Hv = TT.Rop(grad, param, self.rng.normal(param.shape))
         D_t = self.ewma * D_tm1 + (1 - self.ewma) * Hv * Hv
-        vel_t = self.momentum * vel_tm1 - grad * self.learning_rate / TT.sqrt(D_t + eps)
         yield D_tm1, D_t
-        yield param, param + vel_t
+        yield param, param - grad * self.learning_rate / TT.sqrt(D_t + self.epsilon)

@@ -5,7 +5,6 @@
 import climate
 
 from .base import Optimizer
-from .util import as_float, shared_like
 
 logging = climate.get_logger(__name__)
 
@@ -37,10 +36,7 @@ class SGD(Optimizer):
     '''
 
     def _get_updates_for(self, param, grad):
-        vel_tm1 = shared_like(param, 'vel')
-        vel_t = self.momentum * vel_tm1 - self.learning_rate * grad
-        yield vel_tm1, vel_t
-        yield param, param + vel_t
+        yield param, param - self.learning_rate * grad
 
 
 class NAG(SGD):
@@ -89,10 +85,3 @@ class NAG(SGD):
     def _prepare(self, **kwargs):
         super(NAG, self)._prepare(**kwargs)
         self.nesterov = True
-
-    def _get_updates_for(self, param, grad):
-        # see https://github.com/lisa-lab/pylearn2/pull/136#issuecomment-10381617
-        vel_tm1 = shared_like(param, 'vel')
-        vel_t = self.momentum * vel_tm1 - self.learning_rate * grad
-        yield vel_tm1, vel_t
-        yield param, param + self.momentum * vel_t - self.learning_rate * grad
