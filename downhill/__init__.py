@@ -6,7 +6,8 @@ from .first_order import *
 
 def minimize(loss, params, inputs, train, valid=None,
              algo='rmsprop', updates=(), monitors=(),
-             batch_size=32, train_batches=None, valid_batches=None,
+             monitor_gradients=False, batch_size=32,
+             train_batches=None, valid_batches=None,
              **kwargs):
     '''Minimize a loss function with respect to some symbolic parameters.
 
@@ -34,6 +35,9 @@ def minimize(loss, params, inputs, train, valid=None,
         Additional values to monitor during optimization. These must be provided
         as either a sequence of (name, expression) tuples, or as a dictionary
         mapping string names to Theano expressions.
+    monitor_gradients : bool, optional
+        If True, add monitors to log the norms of the parameter gradients during
+        optimization. Defaults to False.
     batch_size : int, optional
         Size of batches provided by datasets. Defaults to 32.
     train_batches : int, optional
@@ -79,5 +83,6 @@ def minimize(loss, params, inputs, train, valid=None,
         params=params,
         inputs=inputs,
         updates=updates,
-        monitors=monitors
+        monitors=monitors,
+        monitor_gradients=monitor_gradients,
     ).minimize(train, valid, **kwargs)

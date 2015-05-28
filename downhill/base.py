@@ -11,7 +11,8 @@ from . import util
 logging = climate.get_logger(__name__)
 
 
-def build(algo, loss, params, inputs, updates=(), monitors=()):
+def build(algo, loss, params, inputs, updates=(), monitors=(),
+          monitor_gradients=False):
     '''Construct an optimizer by name.
 
     Parameters
@@ -32,6 +33,9 @@ def build(algo, loss, params, inputs, updates=(), monitors=()):
         Additional values to monitor during optimization. These must be provided
         as either a sequence of (name, expression) tuples, or as a dictionary
         mapping string names to Theano expressions.
+    monitor_gradients : bool, optional
+        If True, add monitors to log the norms of the parameter gradients during
+        optimization. Defaults to False.
 
     Returns
     -------
@@ -39,7 +43,8 @@ def build(algo, loss, params, inputs, updates=(), monitors=()):
         An optimizer instance.
     '''
     return Optimizer.build(algo, loss, params, inputs,
-                           updates=updates, monitors=monitors)
+                           updates=updates, monitors=monitors,
+                           monitor_gradients=monitor_gradients)
 
 
 class Optimizer(util.Registrar(str('Base'), (), {})):
@@ -61,9 +66,13 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         Additional values to monitor during optimization. These must be provided
         as either a sequence of (name, expression) tuples, or as a dictionary
         mapping string names to Theano expressions.
+    monitor_gradients : bool, optional
+        If True, add monitors to log the norms of the parameter gradients during
+        optimization. Defaults to False.
     '''
 
-    def __init__(self, loss, params, inputs, updates=(), monitors=()):
+    def __init__(self, loss, params, inputs, updates=(), monitors=(),
+                 monitor_gradients=False):
         self._loss = loss
         self._params = params
         self._inputs = inputs
@@ -88,6 +97,10 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         for name, monitor in monitors:
             self._monitor_names.append(name)
             self._monitor_exprs.append(monitor)
+        if monitor_gradients:
+            for p, g in zip(self._params, TT.grad(self._loss, self._params)):
+                self._monitor_names.append('∂{}'.format(p.name))
+                self._monitor_exprs.append((g * g).sum())
 
     def _compile(self):
         '''Compile the Theano functions for evaluating and updating our model.
