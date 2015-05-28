@@ -8,10 +8,14 @@ import utils
 
 climate.enable_default_logging()
 
-train, valid, _ = utils.load_mnist()
+(t_images, t_labels), (v_images, v_labels), _ = utils.load_mnist(labels=True)
 
-N = 11
-K = 9
+# construct training/validation sets consisting of the fours.
+train = t_images[t_labels == 4]
+valid = v_images[v_labels == 4]
+
+N = 20
+K = 20
 B = 784
 
 x = TT.matrix('x')
@@ -19,22 +23,29 @@ x = TT.matrix('x')
 u = theano.shared(np.random.randn(N * N, K * K).astype('f'), name='u')
 v = theano.shared(np.random.randn(K * K, B).astype('f'), name='v')
 
-err = TT.sqr(x - TT.dot(u, v))
+err = TT.sqr(x - TT.dot(u, v)).mean()
 
 downhill.minimize(
-    loss=err.mean() + 0.1 * abs(u).mean() + 0.01 * (v * v).mean(),
+    loss=err + 100 * (0.01 * abs(u).mean() + (v * v).mean()),
     params=[u, v],
     inputs=[x],
     train=train,
     valid=valid,
     batch_size=N * N,
+    monitor_gradients=True,
     monitors=[
-        ('u<0.5', (u < 0.5).mean()),
-        ('v<0.5', (v < 0.5).mean()),
+        ('err', err),
         ('u<-0.5', (u < -0.5).mean()),
-        ('v<-0.5', (v < -0.5).mean()),
+        ('u<-0.1', (u < -0.1).mean()),
+        ('u<0.1', (u < 0.1).mean()),
+        ('u<0.5', (u < 0.5).mean()),
     ],
+    algo='sgd',
     max_gradient_clip=1,
+    learning_rate=0.5,
+    momentum=0.9,
+    patience=3,
+    min_improvement=0.1,
 )
 
 utils.plot_images(v.get_value(), 121)
