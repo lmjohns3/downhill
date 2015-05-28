@@ -64,26 +64,26 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
     '''
 
     def __init__(self, loss, params, inputs, updates=(), monitors=()):
-        self.loss = loss
-        self.params = params
-        self.inputs = inputs
-        self.updates = updates
+        self._loss = loss
+        self._params = params
+        self._inputs = inputs
+        self._updates = updates
         if hasattr(updates, 'items') and callable(updates.items):
-            self.updates = updates.items()
+            self._updates = updates.items()
 
-        self._shapes = [p.get_value(borrow=True).shape for p in self.params]
+        self._shapes = [p.get_value(borrow=True).shape for p in self._params]
         self._counts = [np.prod(s) for s in self._shapes]
         self._starts = np.cumsum([0] + self._counts)[:-1]
-        self._dtype = self.params[0].get_value().dtype
+        self._dtype = self._params[0].get_value().dtype
 
         self._curr_iter = 0
         self._best_iter = 0
         self._best_loss = 1e100
-        self._best_params = [p.get_value().copy() for p in self.params]
+        self._best_params = [p.get_value().copy() for p in self._params]
 
         if hasattr(monitors, 'items') and callable(monitors.items):
             monitors = monitors.items()
-        self._monitor_exprs = [self.loss]
+        self._monitor_exprs = [self._loss]
         self._monitor_names = ['loss']
         for name, monitor in monitors:
             self._monitor_names.append(name)
@@ -94,11 +94,11 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         '''
         logging.info('compiling evaluation function')
         self.f_eval = theano.function(
-            self.inputs, self._monitor_exprs, updates=self.updates)
+            self._inputs, self._monitor_exprs, updates=self._updates)
         logging.info('compiling %s step function', self.__class__.__name__)
-        updates = list(self.updates) + list(self._get_updates())
+        updates = list(self._updates) + list(self._get_updates())
         self.f_step = theano.function(
-            self.inputs, self._monitor_exprs, updates=updates)
+            self._inputs, self._monitor_exprs, updates=updates)
 
     def _get_updates(self):
         '''Get parameter update expressions for performing optimization.
@@ -153,8 +153,8 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             requested and the corresponding Theano gradient expressions.
         '''
         if params is None:
-            params = self.params
-        for param, grad in zip(params, TT.grad(self.loss, params)):
+            params = self._params
+        for param, grad in zip(params, TT.grad(self._loss, params)):
             norm = TT.sqrt((grad * grad).sum())
             yield param, TT.clip(
                 grad * TT.minimum(1, self.max_gradient_norm / norm),
@@ -168,7 +168,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         targets : sequence of ndarray
             Arrays for setting the parameters of our model.
         '''
-        for param, target in zip(self.params, targets):
+        for param, target in zip(self._params, targets):
             param.set_value(target)
 
     def _log(self, monitors, iteration, label='', suffix=''):
@@ -231,7 +231,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         if self._best_loss - loss > self._best_loss * self.min_improvement:
             self._best_loss = loss
             self._best_iter = self._curr_iter
-            self._best_params = [p.get_value().copy() for p in self.params]
+            self._best_params = [p.get_value().copy() for p in self._params]
             marker = ' *'
         self._log(monitors, self._curr_iter - 1, 'validation', marker)
         return self._curr_iter - self._best_iter > self.patience
