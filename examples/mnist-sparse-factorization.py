@@ -2,7 +2,7 @@ import climate
 import numpy as np
 import theano
 import theano.tensor as TT
-import theanopt
+import downhill
 
 import utils
 
@@ -21,7 +21,7 @@ v = theano.shared(np.random.randn(K * K, B).astype('f'), name='v')
 
 err = TT.sqr(x - TT.dot(u, v))
 
-theanopt.minimize(
+downhill.minimize(
     loss=err.mean() + 0.1 * abs(u).mean() + 0.01 * (v * v).mean(),
     params=[u, v],
     inputs=[x],
@@ -29,9 +29,12 @@ theanopt.minimize(
     valid=valid,
     batch_size=N * N,
     monitors=[
-        ('u<0.1', 100 * (abs(u) < 0.1).mean()),
-        ('v<0.1', 100 * (abs(v) < 0.1).mean()),
+        ('u<0.5', (u < 0.5).mean()),
+        ('v<0.5', (v < 0.5).mean()),
+        ('u<-0.5', (u < -0.5).mean()),
+        ('v<-0.5', (v < -0.5).mean()),
     ],
+    max_gradient_clip=1,
 )
 
 utils.plot_images(v.get_value(), 121)
