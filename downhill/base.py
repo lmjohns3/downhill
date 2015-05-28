@@ -246,7 +246,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 momentum=0.9,
                 nesterov=True,
                 **kwargs):
-        '''Optimize our loss iteratively using a training and validation dataset.
+        r'''Optimize a loss iteratively using a training and validation dataset.
 
         This method yields a series of monitor values to the caller. After every
         optimization epoch, a pair of monitor dictionaries is generated: one
@@ -259,9 +259,9 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
 
         Parameters
         ----------
-        train : :class:`Dataset <downhill.dataset.Dataset>`
+        train : sequence or :class:`Dataset <downhill.dataset.Dataset>`
             A set of training data for computing updates to model parameters.
-        valid : :class:`Dataset <downhill.dataset.Dataset>`, optional
+        valid : sequence or :class:`Dataset <downhill.dataset.Dataset>`, optional
             A set of validation data for computing monitor values and
             determining when the loss has stopped improving. Defaults to the
             training data.
@@ -293,11 +293,13 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         momentum : float, optional
             Apply momentum to the parameter updates for this optimizer, with the
             given strength. Typically this value ranges from 0 (no momentum) to
-            1 - epsilon (large momentum). Defaults to 0.9. Set to 0 to disable.
+            :math:`1 - \epsilon` (large momentum). Defaults to 0.9. Set to 0 to
+            disable.
         nesterov : bool, optional
             If True, and momentum is nonzero, apply Nesterov-style momentum to
             parameter updates for this optimizer. Defaults to True. Set to False
-            to apply "regular" momentum.
+            to apply "regular" momentum. See :class:`NAG <downhill.NAG>` for a
+            description of Nesterov momentum.
 
         Returns
         -------
@@ -309,20 +311,20 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             dataset.
         '''
         self.patience = patience
-        logging.info('-- patience = %s', patience)
         self.validate_every = validate_every
-        logging.info('-- validate_every = %s', validate_every)
         self.min_improvement = min_improvement
-        logging.info('-- min_improvement = %s', min_improvement)
         self.max_gradient_norm = max_gradient_norm
-        logging.info('-- max_gradient_norm = %s', max_gradient_norm)
         self.max_gradient_clip = max_gradient_clip
-        logging.info('-- max_gradient_clip = %s', max_gradient_clip)
         self.learning_rate = learning_rate
-        logging.info('-- learning_rate = %s', learning_rate)
         self.momentum = momentum
-        logging.info('-- momentum = %s', momentum)
         self.nesterov = nesterov
+        logging.info('-- patience = %s', patience)
+        logging.info('-- validate_every = %s', validate_every)
+        logging.info('-- min_improvement = %s', min_improvement)
+        logging.info('-- max_gradient_norm = %s', max_gradient_norm)
+        logging.info('-- max_gradient_clip = %s', max_gradient_clip)
+        logging.info('-- learning_rate = %s', learning_rate)
+        logging.info('-- momentum = %s', momentum)
         logging.info('-- nesterov = %s', nesterov)
 
         self._prepare(**kwargs)
