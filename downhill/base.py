@@ -254,7 +254,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 max_gradient_norm=1e10,
                 max_gradient_clip=1e10,
                 learning_rate=1e-4,
-                momentum=0.9,
+                momentum=0,
                 nesterov=True,
                 **kwargs):
         r'''Optimize a loss iteratively using a training and validation dataset.
@@ -304,8 +304,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         momentum : float, optional
             Apply momentum to the parameter updates for this optimizer, with the
             given strength. Typically this value ranges from 0 (no momentum) to
-            :math:`1 - \epsilon` (large momentum). Defaults to 0.9. Set to 0 to
-            disable.
+            :math:`1 - \epsilon` (large momentum). Defaults to 0.
         nesterov : bool, optional
             If True, and momentum is nonzero, apply Nesterov-style momentum to
             parameter updates for this optimizer. Defaults to True. Set to False
