@@ -17,7 +17,7 @@ logging = climate.get_logger(__name__)
 class Dataset:
     '''This class handles batching and shuffling a dataset.
 
-    In ``theanopt``, losses are optimized using sets of data collected from the
+    In ``downhill``, losses are optimized using sets of data collected from the
     problem that generated the loss.
 
     During optimization, data are grouped into "mini-batches"---that is, chunks

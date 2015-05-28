@@ -3,16 +3,15 @@ import setuptools
 
 setuptools.setup(
     name='downhill',
-    version='0.1.0',
+    version='0.1.0pre',
     packages=setuptools.find_packages(),
     author='Leif Johnson',
     author_email='leif@lmjohns3.com',
-    description='SGD-based optimization routines for theano',
+    description='Stochastic optimization routines for Theano',
     long_description=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'README.rst')).read(),
     license='MIT',
-    url='http://github.com/lmjohns3/theanopt',
+    url='http://github.com/lmjohns3/downhill',
     keywords=('adadelta '
-              'adagrad '
               'gradient-descent '
               'nesterov '
               'optimization '
