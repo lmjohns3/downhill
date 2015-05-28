@@ -20,21 +20,20 @@ __all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD']
 class RProp(Optimizer):
     r'''Optimization algorithm using resilient backpropagation.
 
-    The RProp method uses the same general strategy as SGD (both methods are
-    make small parameter adjustments using local derivative information). The
-    difference is that in RProp, only the signs of the partial derivatives are
-    taken into account when making parameter updates. That is, the step size for
-    each parameter is independent of the magnitude of the gradient for that
-    parameter.
+    Like many stochastic optimizers, the RProp method takes small steps in
+    parameter space using local gradient information. Unlike :class:`SGD
+    <downhill.first_order.SGD>`, however, in RProp, only the signs of the
+    gradients are taken into account when making parameter updates. That is, the
+    step size for each parameter is independent of the magnitude of the gradient
+    for that parameter.
 
     To accomplish this, RProp maintains a separate learning rate for every
     parameter in the model, and adjusts this learning rate based on the
-    consistency of the sign of the gradient of the loss with respect to that
-    parameter over time. Whenever two consecutive gradients for a parameter have
-    the same sign, the learning rate for that parameter increases, and whenever
-    the signs disagree, the learning rate decreases. This has a similar effect
-    to momentum-based SGD methods but effectively maintains parameter-specific
-    learning rates.
+    consistency of the sign of the gradient over time. Whenever two consecutive
+    gradients for a parameter have the same sign, the learning rate for that
+    parameter increases, and whenever the signs disagree, the learning rate
+    decreases. This has a similar effect to momentum-based stochastic gradient
+    methods but effectively maintains parameter-specific learning rates.
 
     .. math::
         \begin{eqnarray*}
@@ -56,9 +55,20 @@ class RProp(Optimizer):
     and minimum step size.
 
     The implementation here is actually the "iRprop-" variant of RProp described
-    in Algorithm 4 from Igel and Huesken, "Improving the Rprop Learning
-    Algorithm" (2000). This variant resets the running gradient estimates to
-    zero in cases where the previous and current gradients have switched signs.
+    in Algorithm 4 from [Igel00]_. This variant resets the running gradient
+    estimates to zero in cases where the previous and current gradients have
+    switched signs.
+
+    References
+    ----------
+
+    .. [Riedmiller92] M. Riedmiller & H. Braun. (1992) "Rprop - A Fast Adaptive
+       Learning Algorithm." In Proceedings of the International Symposium on
+       Computer and Information Science VII.
+
+    .. [Igel00] C. Igel & M. Hüsken. (2000) "Improving the Rprop Learning
+       Algorithm." In Proceedings of the Second International Symposium on Neural
+       Computation. http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.17.1332
     '''
 
     def _prepare(self,
@@ -100,23 +110,22 @@ class RMSProp(Optimizer):
     parameter adjustments iteratively using local derivative information.
 
     The difference here is that as gradients are computed during each parameter
-    update, an exponential moving average of gradient magnitudes is maintained
-    as well. At each update, the EWMA is used to compute the root-mean-square
-    (RMS) gradient value that's been seen in the recent past. The actual
-    gradient is normalized by this RMS scaling factor before being applied to
-    update the parameters.
+    update, an exponentially-weighted moving average (EWMA) of gradient
+    magnitudes is maintained as well. At each update, the EWMA is used to
+    compute the root-mean-square (RMS) gradient value that's been seen in the
+    recent past. The actual gradient is normalized by this RMS scaling factor
+    before being applied to update the parameters.
 
     .. math::
         \begin{eqnarray*}
         f_{t+1} &=& \gamma a_t + (1 - \gamma) \frac{\partial\mathcal{L}}{\partial p} \\
         g_{t+1} &=& \gamma g_t + (1 - \gamma) \left(
            \frac{\partial\mathcal{L}}{\partial p}\right)^2 \\
-        v_{t+1} &=& \mu v_t - \frac{\alpha}{\sqrt{g_{t+1} - f_{t+1}^2 + \epsilon}}
-           \frac{\partial\mathcal{L}}{\partial p} \\
-        p_{t+1} &=& p_t + v_{t+1}
+        p_{t+1} &=& p_t - \frac{\alpha}{\sqrt{g_{t+1} - f_{t+1}^2 + \epsilon}}
+           \frac{\partial\mathcal{L}}{\partial p}
         \end{eqnarray*}
 
-    Like :class:`Rprop`, this learning method effectively maintains a sort of
+    Like :class:`RProp`, this learning method effectively maintains a sort of
     parameter-specific momentum value, but this method takes into account both
     the sign and the magnitude of the gradient for each parameter.
 
@@ -129,12 +138,16 @@ class RMSProp(Optimizer):
     inversely with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln
     2}{h}}`.
 
-    The implementation here is taken from Graves, "Generating Sequences With
-    Recurrent Neural Networks" (2013), equations (38)--(45); the paper is
-    available at http://arxiv.org/abs/1308.0850. Graves' implementation in
-    particular seems to have introduced the :math:`f_t` terms into the RMS
-    computation; these terms appear to act as a sort of momentum for the RMS
-    values.
+    The implementation here is taken from [Graves13]_, equations (38)--(45).
+    Graves' implementation in particular seems to have introduced the
+    :math:`f_t` terms into the RMS computation; these terms appear to act as a
+    sort of momentum for the RMS values.
+
+    References
+    ----------
+
+    .. [Graves13] A. Graves. (2013) "Generating Sequences With Recurrent Neural
+       Networks." http://arxiv.org/abs/1308.0850
     '''
 
     def _prepare(self, rms_halflife=14, rms_regularizer=1e-8, **kwargs):
@@ -158,39 +171,46 @@ class RMSProp(Optimizer):
 class ADADELTA(RMSProp):
     r'''ADADELTA optimizes scalar losses scaled stochastic gradient steps.
 
-    The ADADELTA method uses the same general strategy as :class:`SGD` (both
-    methods are make small parameter adjustments using local derivative
-    information). The difference here is that as gradients are computed during
-    each parameter update, an exponential weighted moving average gradient
-    value, as well as an exponential weighted moving average of recent parameter
-    steps, are maintained as well. The actual gradient is normalized by the
-    ratio of the parameter step RMS values to the gradient RMS values.
+    The ADADELTA method uses the same general strategy as all first-order
+    stochastic gradient methods, in the sense that these methods make small
+    parameter adjustments iteratively using local derivative information.
+
+    The difference with ADADELTA is that as gradients are computed during each
+    parameter update, an exponentially-weighted weighted moving average (EWMA)
+    gradient value, as well as an EWMA of recent parameter steps, are maintained
+    as well. The actual gradient is normalized by the ratio of the
+    root-mean-square (RMS) parameter step size to the RMS gradient magnitude.
 
     .. math::
         \begin{eqnarray*}
         g_{t+1} &=& \gamma g_t + (1 - \gamma) \left(
            \frac{\partial\mathcal{L}}{\partial p}\right)^2 \\
-        v_{t+1} &=& -\frac{\sqrt{x_t + \epsilon}}{\sqrt{g_{t+1} + \epsilon}}
+        v_{t+1} &=& \frac{\sqrt{x_t + \epsilon}}{\sqrt{g_{t+1} + \epsilon}}
            \frac{\partial\mathcal{L}}{\partial p} \\
         x_{t+1} &=& \gamma x_t + (1 - \gamma) v_{t+1}^2 \\
-        p_{t+1} &=& p_t + v_{t+1}
+        p_{t+1} &=& p_t - v_{t+1}
         \end{eqnarray*}
 
-    Like :class:`Rprop` and the :class:`RMSProp`--:class:`ESGD` family, this
+    Like :class:`RProp` and the :class:`RMSProp`--:class:`ESGD` family, this
     learning method effectively maintains a sort of parameter-specific momentum
     value. The primary difference between this method and :class:`RMSProp` is
     that ADADELTA additionally incorporates a sliding window of RMS parameter
-    steps, obviating the need for a learning rate parameter.
+    step sizes, (somewhat) obviating the need for a learning rate parameter.
 
-    In this implementation, :math:`\epsilon` is specified using the
-    ``rms_regularizer`` parameter. The weight
-    parameter :math:`\gamma` for the EWMA window is computed from the
+    In this implementation, the RMS values are regularized (made less extreme)
+    by :math:`\epsilon`, which is specified using the ``rms_regularizer``
+    parameter.
+
+    The weight parameter :math:`\gamma` for the EWMA window is computed from the
     ``rms_halflife`` keyword argument, such that the actual EWMA weight varies
     inversely with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln
     2}{h}}`.
 
-    The implementation is modeled after Zeiler (2012), "ADADELTA: An adaptive
-    learning rate method," available at http://arxiv.org/abs/1212.5701.
+    References
+    ----------
+
+    .. [Zeiler12] M. Zeiler. (2012) "ADADELTA: An adaptive learning rate method."
+       http://arxiv.org/abs/1212.5701
     '''
 
     def _get_updates_for(self, param, grad):
@@ -207,44 +227,56 @@ class ADADELTA(RMSProp):
 class ESGD(RMSProp):
     r'''Equilibrated SGD computes a diagonal preconditioner for gradient descent.
 
-    The ESGD method uses the same general strategy as SGD, in the sense that all
-    gradient-based methods make small parameter adjustments using local
-    derivative information. The difference here is that as gradients are
-    computed during each parameter update, an exponential moving average of
-    diagonal preconditioner values is maintained as well. At each update, the
-    EWMA is used to compute the root-mean-square (RMS) diagonal preconditioner
-    value that's been seen in the recent past. The actual gradient is normalized
-    by this preconditioner before being applied to update the parameters.
+    The ESGD method uses the same general strategy as all first-order
+    stochastic gradient methods, in the sense that these methods make small
+    parameter adjustments iteratively using local derivative information.
+
+    The difference here is that as gradients are computed during each parameter
+    update, an exponentially-weighted moving average (EWMA) of diagonal
+    preconditioner estimates is maintained as well. At each update, the EWMA is
+    used to compute the root-mean-square (RMS) diagonal preconditioner value
+    that's been seen in the recent past. The actual gradient is normalized by
+    this preconditioner before being applied to update the parameters.
 
     .. math::
         \begin{eqnarray*}
         r &\sim& \mathcal{N}(0, 1) \\
         Hr &=& \frac{\partial^2 \mathcal{L}}{\partial^2 p}r \\
         D_{t+1} &=& \gamma D_t + (1 - \gamma) (Hr)^2 \\
-        v_{t+1} &=& \mu v_t - \frac{\alpha}{\sqrt{D_{t+1} + \epsilon}}
-           \frac{\partial\mathcal{L}}{\partial p} \\
-        p_{t+1} &=& p_t + v_{t+1}
+        p_{t+1} &=& p_t + - \frac{\alpha}{\sqrt{D_{t+1} + \epsilon}}
+           \frac{\partial\mathcal{L}}{\partial p}
         \end{eqnarray*}
 
     Like :class:`Rprop` and the :class:`ADADELTA`--:class:`RMSProp` family, this
-    learning method effectively maintains a sort of parameter-specific momentum
-    value. The primary difference between this method and :class:`RMSProp` is
-    that ESGD treats the normalizing fraction explicitly as a preconditioner for
-    the diaonal of the Hessian, and estimates this diagonal by drawing a vector
-    of standard normal values at every training step. The primary difference
-    between this implementation and the algorithm described in the paper (see
-    below) is the use of an EWMA to decay the diagonal values over time, while
-    in the paper the diagonal is divided by the training iteration.
+    learning method effectively maintains a sort of parameter-specific learning
+    rate for each parameter in the loss.
 
-    In this implementation, :math:`\epsilon` is specified using the
-    ``rms_regularizer`` parameter. The weight parameter :math:`\gamma` for the
-    EWMA window is computed from the ``rms_halflife`` keyword argument, such
-    that the actual EWMA weight varies inversely with the halflife :math:`h`:
-    :math:`\gamma = e^{\frac{-\ln 2}{h}}`.
+    The primary difference between this method and :class:`RMSProp` is that ESGD
+    treats the normalizing fraction explicitly as a preconditioner for the
+    diaonal of the Hessian, and estimates this diagonal by drawing a vector of
+    standard normal values at every training step.
 
-    The implementation here is modeled after Dauphin, de Vries, Chung & Bengio
-    (2014), "RMSProp and equilibrated adaptive learning rates for non-convex
-    optimization," http://arxiv.org/pdf/1502.04390.pdf.
+    The primary difference between this implementation and the algorithm
+    described in the paper (see below) is the use of an EWMA to decay the
+    diagonal values over time, while in the paper the diagonal is divided by the
+    training iteration. The EWMA halflife should be set to something reasonably
+    large to ensure that this method emulates the method described in the
+    original paper.
+
+    In this implementation, :math:`\epsilon` regularizes the RMS values; it is
+    is specified using the ``rms_regularizer`` parameter.
+
+    The weight parameter :math:`\gamma` for the EWMA is computed from the
+    ``rms_halflife`` keyword argument, such that the actual EWMA weight varies
+    inversely with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln
+    2}{h}}`.
+
+    References
+    ----------
+
+    .. [Dauphin14] Y. Dauphin, H. de Vries, J. Chung & Y. Bengio. (2014)
+       "RMSProp and equilibrated adaptive learning rates for non-convex
+       optimization." http://arxiv.org/abs/1502.04390
     '''
 
     def __init__(self, *args, **kwargs):
