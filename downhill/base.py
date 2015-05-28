@@ -365,20 +365,12 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             yield training, validation
         self.set_params(self._best_params)
 
-    def minimize(self, train, valid, **kwargs):
-        '''Optimize our loss using a training and validation dataset.
+    def minimize(self, *args, **kwargs):
+        '''Optimize our loss exhaustively.
 
         This method is a thin wrapper over the :func:`iteropt` method. It simply
         exhausts the iterative optimization process and returns the final
         monitor values.
-
-        Parameters
-        ----------
-        train : :class:`Dataset <downhill.dataset.Dataset>`
-            A set of training data for computing updates to model parameters.
-        valid : :class:`Dataset <downhill.dataset.Dataset>`
-            A set of validation data for computing monitor values and
-            determining when the loss has stopped improving.
 
         Returns
         -------
@@ -390,7 +382,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             dataset.
         '''
         monitors = None
-        for monitors in self.iteropt(train, valid, **kwargs):
+        for monitors in self.iteropt(*args, **kwargs):
             pass
         return monitors
 
