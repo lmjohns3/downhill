@@ -15,8 +15,6 @@ learning rate and momentum values.
 import climate
 import downhill
 import matplotlib.pyplot as plt
-import matplotlib.animation as anim
-import mpl_toolkits.mplot3d.axes3d
 import numpy as np
 import theano
 import theano.tensor as TT
