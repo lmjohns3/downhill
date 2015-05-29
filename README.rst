@@ -1,23 +1,25 @@
-The ``downhill`` package provides tools for minimizing scalar loss functions. It
-uses Python for rapid development, and under the hood Theano_ provides graph
-optimization and fast computations on the GPU.
+============
+``DOWNHILL``
+============
+
+The ``downhill`` package provides algorithms for minimizing scalar loss
+functions that are defined using Theano_.
 
 Several optimization algorithms are included:
 
 - First-order stochastic gradient descent: SGD_ and NAG_.
-- Second-order stochastic gradient descent: `Hessian-free`_.
 - First-order stochastic techniques with adaptive learning rates: RProp_,
-  RMSProp_, `Equilibrated SGD`_, and ADADELTA_.
+  RMSProp_, `Equilibrated SGD`_, Adam_, and ADADELTA_.
 - Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
 .. _Theano: http://deeplearning.net/software/theano/
 
 .. _SGD: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.SGD.html
 .. _NAG: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.NAG.html
-.. _Hessian-free: http://downhill.readthedocs.org/en/stable/generated/downhill.second_order.HF.html
 .. _RProp: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RProp.html
 .. _RMSProp: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RMSProp.html
 .. _ADADELTA: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ADADELTA.html
+.. _Adam: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.Adam.html
 .. _Equilibrated SGD: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ESGD.html
 
 Example Code

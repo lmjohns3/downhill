@@ -2,9 +2,8 @@
 ``DOWNHILL``
 ============
 
-The ``downhill`` package provides tools for minimizing scalar loss functions. It
-uses Python for rapid development, and under the hood Theano_ provides graph
-optimization and fast computations on the GPU.
+The ``downhill`` package provides algorithms for minimizing scalar loss
+functions that are defined using Theano_.
 
 Several optimization algorithms are included:
 
@@ -12,8 +11,8 @@ Several optimization algorithms are included:
   <downhill.first_order.SGD>` and :class:`NAG <downhill.first_order.NAG>`.
 - First-order stochastic techniques with adaptive learning rates: :class:`RProp
   <downhill.adaptive.RProp>`, :class:`RMSProp <downhill.adaptive.RMSProp>`,
-  :class:`Equilibrated SGD <downhill.adaptive.ESGD>`, and :class:`ADADELTA
-  <downhill.adaptive.ADADELTA>`.
+  :class:`Equilibrated SGD <downhill.adaptive.ESGD>`, :class:`Adam
+  <downhill.adaptive.Adam>`, and :class:`ADADELTA <downhill.adaptive.ADADELTA>`.
 - Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
 The source code for ``downhill`` lives at http://github.com/lmjohns3/downhill,
@@ -41,9 +40,9 @@ where the first term represents the approximation error, the second represents
 the sparsity of the representation, and the third prevents the basis vectors
 from growing too large.
 
-This is pretty straightforward to model using Theano. Once you have set up the
-appropriate variables and an expression for the loss, you can optimize it using
-``downhill``::
+This is pretty straightforward to model using Theano. Once you set up the
+appropriate variables and an expression for the loss, you can optimize the loss
+with respect to the variables using ``downhill``::
 
   import climate
   import theano
@@ -76,7 +75,7 @@ appropriate variables and an expression for the loss, you can optimize it using
   )
 
 After optimization, you can get the :math:`u` and :math:`v` matrix values out of
-the shared variables using ``get_value()``.
+the shared variables using ``u.get_value()`` and ``v.get_value()``.
 
 Documentation
 =============
