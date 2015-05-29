@@ -270,7 +270,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 max_gradient_clip=1e10,
                 learning_rate=1e-4,
                 momentum=0,
-                nesterov=True,
+                nesterov=False,
                 **kwargs):
         r'''Optimize a loss iteratively using a training and validation dataset.
 
@@ -322,9 +322,9 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             :math:`1 - \epsilon` (large momentum). Defaults to 0.
         nesterov : bool, optional
             If True, and momentum is nonzero, apply Nesterov-style momentum to
-            parameter updates for this optimizer. Defaults to True. Set to False
-            to apply "regular" momentum. See :class:`NAG <downhill.NAG>` for a
-            description of Nesterov momentum.
+            parameter updates for this optimizer. If False and momentum is
+            nonzero, "regular" momentum is applied. See
+            :class:`NAG <downhill.NAG>` for a description of Nesterov momentum.
 
         Returns
         -------
