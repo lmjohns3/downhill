@@ -53,5 +53,5 @@ Z = 100 * (Y - X ** 2) ** 2 + (1 - X) ** 2
 ax.plot([1], [1], 'x', mew=2, color='#111111')
 ax.contourf(X, Y, Z, np.logspace(0, 3, 10))
 
-plt.legend(loc='upper left')
+plt.legend(loc='lower right')
 plt.show()
