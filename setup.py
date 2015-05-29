@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name='downhill',
-    version='0.1.0pre',
+    version='0.1.0',
     packages=setuptools.find_packages(),
     author='Leif Johnson',
     author_email='leif@lmjohns3.com',
@@ -12,6 +12,8 @@ setuptools.setup(
     license='MIT',
     url='http://github.com/lmjohns3/downhill',
     keywords=('adadelta '
+x              'adam '
+              'esgd '
               'gradient-descent '
               'nesterov '
               'optimization '
