@@ -132,7 +132,8 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 yield vel_tm1, vel_t
                 if self.nesterov:
                     # https://github.com/lisa-lab/pylearn2/pull/136#issuecomment-10381617
-                    yield param, param + self.momentum * vel_t + delta
+                    yield param, (param + self.momentum ** 2 * vel_tm1
+                                  + (1 + self.momentum) * delta)
                 else:
                     yield param, param + vel_t
 
