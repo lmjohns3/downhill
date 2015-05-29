@@ -12,7 +12,7 @@ setuptools.setup(
     license='MIT',
     url='http://github.com/lmjohns3/downhill',
     keywords=('adadelta '
-x              'adam '
+              'adam '
               'esgd '
               'gradient-descent '
               'nesterov '
