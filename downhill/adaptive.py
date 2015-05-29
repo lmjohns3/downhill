@@ -288,8 +288,9 @@ class ESGD(RMSProp):
         D_tm1 = shared_like(param, 'D_ewma')
         Hv = TT.Rop(grad, param, self.rng.normal(param.shape))
         D_t = self.ewma * D_tm1 + (1 - self.ewma) * Hv * Hv
+        den = TT.sqrt(D_t) + self.epsilon
         yield D_tm1, D_t
-        yield param, param - grad * self.learning_rate / TT.sqrt(D_t + self.epsilon)
+        yield param, param - grad * self.learning_rate / den
 
 
 class Adam(RMSProp):
