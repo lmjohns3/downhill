@@ -31,3 +31,11 @@ class TestADADELTA:
 
     def test_factor(self):
         util.assert_progress(*util.build_factor('adadelta'))
+
+
+class TestAdam:
+    def test_rosen(self):
+        util.assert_progress(*util.build_rosen('adam'))
+
+    def test_factor(self):
+        util.assert_progress(*util.build_factor('adam'))

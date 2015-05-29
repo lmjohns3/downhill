@@ -23,6 +23,9 @@ class TestBuild:
     def test_esgd(self):
         assert isinstance(util.build_rosen('EsGd')[0], downhill.ESGD)
 
+    def test_adam(self):
+        assert isinstance(util.build_rosen('Adam')[0], downhill.Adam)
+
 
 class Tester(downhill.Optimizer):
     def _get_updates_for(self, param, grad):

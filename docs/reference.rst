@@ -38,10 +38,11 @@ Adaptive Optimizers
 .. autosummary::
    :toctree: generated/
 
-   RProp
-   RMSProp
    ADADELTA
+   Adam
    ESGD
+   RMSProp
+   RProp
 
 Datasets
 ========

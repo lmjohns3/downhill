@@ -5,6 +5,7 @@
 
 import climate
 import numpy as np
+import theano
 import theano.tensor as TT
 
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
@@ -14,7 +15,7 @@ from .util import as_float, shared_like
 
 logging = climate.get_logger(__name__)
 
-__all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD']
+__all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD', 'Adam']
 
 
 class RProp(Optimizer):
@@ -289,3 +290,77 @@ class ESGD(RMSProp):
         D_t = self.ewma * D_tm1 + (1 - self.ewma) * Hv * Hv
         yield D_tm1, D_t
         yield param, param - grad * self.learning_rate / TT.sqrt(D_t + self.epsilon)
+
+
+class Adam(RMSProp):
+    r'''Adam optimizes using per-parameter learning rates.
+
+    The ESGD method uses the same general strategy as all first-order
+    stochastic gradient methods, in the sense that these methods make small
+    parameter adjustments iteratively using local derivative information.
+
+    The difference here is that as gradients are computed during each parameter
+    update, exponentially-weighted moving averages (EWMAs) of (1) the first
+    moment of the recent gradient values and (2) the second moment of recent
+    gradient values are maintained as well. At each update, the step taken is
+    proportional to the ratio of the first moment to the second moment.
+
+    .. math::
+        \begin{eqnarray*}
+        \beta_1^t &=& \beta_1 \lambda^{t}
+        f_{t+1} &=& \beta_1^t f_t + (1 - \beta_1^t)
+           \frac{\partial\mathcal{L}}{\partial\theta} \\
+        g_{t+1} &=& \beta_2 g_t + (1 - \beta_2)
+           \left(\frac{\partial\mathcal{L}}{\partial\theta}\right)^2 \\
+        \theta_{t+1} &=& \theta_t -
+           \frac{f_{t+1} / (1 - \beta_1^t)}{\sqrt{g_{t+1} / (1 - \beta_2)} + \epsilon}
+        \end{eqnarray*}
+
+    Like all adaptive optimization algorithms, this optimizer effectively
+    maintains a sort of parameter-specific momentum value. It shares with
+    :class:`RMSProp` and :class:`ADADELTA` the idea of using an EWMA to track
+    recent quantities related to the stochastic gradient during optimization.
+    But the Adam method is unique in that it incorporates an explicit
+    computation to remove the bias from these estimates.
+
+    In this implementation, :math:`\epsilon` regularizes the RMS values and is
+    given using the ``rms_regularizer`` keyword argument. The weight parameters
+    :math:`\beta_1` and :math:`\beta_2` for the first and second EWMA windows
+    are computed from the ``beta1_halflife`` and ``beta2_halflife`` keyword
+    arguments, respectively, such that the actual EWMA weight varies inversely
+    with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln 2}{h}}`. The
+    decay :math:`\lambda` for the :math:`\beta_1` EWMA is provided by the
+    ``beta1_decay`` keyword argument.
+
+    The implementation here is taken from Algorithm 1 of [Kin15]_.
+
+    References
+    ----------
+
+    .. [Kin15] D. Kingma & J. Ba. (ICLR 2015) "Adam: A Method for
+       Stochastic Optimization." http://arxiv.org/abs/1412.6980
+    '''
+
+    def _prepare(self,
+                 beta1_decay=1 - 1e-6,
+                 beta1_halflife=7,
+                 beta2_halflife=69,
+                 **kwargs):
+        self.beta1_decay = as_float(beta1_decay)
+        self.beta1 = as_float(np.exp(-np.log(2) / kwargs.get('beta1_halflife', 7)))
+        self.beta2 = as_float(np.exp(-np.log(2) / kwargs.get('beta2_halflife', 69)))
+        super(Adam, self)._prepare(**kwargs)
+
+    def _get_updates_for(self, param, grad):
+        t_tm1 = theano.shared(np.cast['float32'](0), 't')
+        g1_tm1 = shared_like(param, 'g1_ewma')
+        g2_tm1 = shared_like(param, 'g2_ewma')
+        beta1 = self.beta1 * self.beta1_decay ** t_tm1
+        g1_t = beta1 * g1_tm1 + (1 - beta1) * grad
+        g2_t = self.beta2 * g2_tm1 + (1 - self.beta2) * grad * grad
+        num = g1_t / (1 - beta1)
+        den = TT.sqrt(g2_t / (1 - self.beta2))
+        yield t_tm1, t_tm1 + 1
+        yield g1_tm1, g1_t
+        yield g2_tm1, g2_t
+        yield param, param - self.learning_rate * num / (den + self.epsilon)
