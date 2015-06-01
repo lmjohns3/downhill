@@ -21,7 +21,7 @@ import theano.tensor as TT
 
 climate.enable_default_logging()
 
-COLORS = ('#d62728 #1f77b4 #2ca02c #9467bd #ff7f0e'
+COLORS = ('#d62728 #1f77b4 #2ca02c #9467bd #ff7f0e '
           '#e377c2 #8c564b #bcbd22 #7f7f7f #17becf').split()
 
 
