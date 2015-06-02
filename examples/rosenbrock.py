@@ -51,7 +51,7 @@ def build_and_trace(algo, limit=100, **kwargs):
     monitor values that were computed during that iteration. Here we build an
     optimizer and then run it for a fixed number of iterations.
     '''
-    kw = dict(min_improvement=0, patience=100, max_gradient_norm=100)
+    kw = dict(min_improvement=0, patience=0, max_gradient_norm=100)
     kw.update(kwargs)
     xs, ys, loss = [], [], []
     for tm, _ in build(algo).iteropt([[]], **kw):
