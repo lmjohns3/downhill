@@ -70,6 +70,6 @@ def test(algos, n=10, init=[-1.1, 0], limit=100):
             rate = np.exp(np.random.uniform(-8, 0))
             half = int(np.exp(np.random.uniform(0, 4)))
             reg = np.exp(np.random.uniform(-12, 0))
-            yield (algo, rate, mu, half, reg), rosenbrock.build_and_trace(
+            yield (algo, rate, mu, half, reg), build_and_trace(
                 algo, init, limit, momentum=mu, learning_rate=rate,
                 rms_halflife=half, rms_regularizer=reg)
