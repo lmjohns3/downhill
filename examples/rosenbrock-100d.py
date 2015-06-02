@@ -18,8 +18,8 @@ import numpy as np
 import rosenbrock
 
 
-algos = 'NAG RMSProp Adam ADADELTA'.split()
-results = rosenbrock.test(algos, n=3, init=[-1] * 100, limit=1000)
+algos = 'NAG RMSProp Adam ADADELTA ESGD'.split()
+results = rosenbrock.test(algos, n=10, init=[-1] * 100, limit=1000)
 
 
 # Here we make plots of the marginal performance of each of the four
