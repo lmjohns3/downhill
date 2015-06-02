@@ -129,13 +129,14 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                     continue
                 delta = expr - param
                 vel_tm1 = util.shared_like(param, 'vel')
-                vel_t = self.momentum * vel_tm1 + delta
+                vel_t = util.as_float(self.momentum) * vel_tm1 + delta
                 yield vel_tm1, vel_t
                 if self.nesterov:
                     # see http://arxiv.org/pdf/1212.0901v2.pdf (eq 7) and
                     # https://github.com/lisa-lab/pylearn2/pull/136#issuecomment-10381617
-                    yield param, (param + self.momentum ** 2 * vel_tm1
-                                  + (1 + self.momentum) * delta)
+                    mom_sqr = util.as_float(self.momentum ** 2)
+                    mom_inc = util.as_float(1 + self.momentum)
+                    yield param, param + mom_sqr * vel_tm1 + mom_inc * delta
                 else:
                     yield param, param + vel_t
 
@@ -331,10 +332,11 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             given strength. Typically this value ranges from 0 (no momentum) to
             :math:`1 - \epsilon` (large momentum). Defaults to 0.
         nesterov : bool, optional
-            If True, and momentum is nonzero, apply Nesterov-style momentum to
-            parameter updates for this optimizer. If False and momentum is
-            nonzero, "regular" momentum is applied. See
-            :class:`NAG <downhill.NAG>` for a description of Nesterov momentum.
+            If True, and ``momentum`` is nonzero, apply Nesterov-style momentum
+            to parameter updates for this optimizer. If False, and ``momentum``
+            is nonzero, "regular" momentum is applied. Has no effect if
+            ``momentum`` is zero. See :class:`NAG <downhill.NAG>` for a
+            description of Nesterov momentum.
 
         Returns
         -------
@@ -348,18 +350,18 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         self.patience = patience
         self.validate_every = validate_every
         self.min_improvement = min_improvement
-        self.max_gradient_norm = util.as_float(max_gradient_norm)
-        self.max_gradient_elem = util.as_float(max_gradient_elem)
+        self.max_gradient_norm = max_gradient_norm
+        self.max_gradient_elem = max_gradient_elem
         if 'max_gradient_clip' in kwargs:
             warnings.warn('Use "max_gradient_elem" instead of "max_gradient_clip"',
                           DeprecationWarning)
-            self.max_gradient_elem = util.as_float(kwargs.pop('max_gradient_clip'))
+            self.max_gradient_elem = kwargs.pop('max_gradient_clip')
         if 'gradient_clip' in kwargs:
             warnings.warn('Use "max_gradient_elem" instead of "gradient_clip"',
                           DeprecationWarning)
-            self.max_gradient_elem = util.as_float(kwargs.pop('gradient_clip'))
+            self.max_gradient_elem = kwargs.pop('gradient_clip')
         self.learning_rate = util.as_float(learning_rate)
-        self.momentum = util.as_float(momentum)
+        self.momentum = momentum
         self.nesterov = nesterov
         logging.info('-- patience = %s', patience)
         logging.info('-- validate_every = %s', validate_every)
