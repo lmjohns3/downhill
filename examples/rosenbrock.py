@@ -60,7 +60,8 @@ def build_and_trace(algo, limit=100, **kwargs):
         loss.append(tm['loss'])
         if len(xs) == limit:
             break
-    return xs, ys, loss
+    # Return the optimization up to any failure of patience.
+    return xs[:-9], ys[:-9], loss[-9]
 
 
 def plot(results, algo=None):
@@ -71,13 +72,13 @@ def plot(results, algo=None):
     '''
     def by_loss(item):
         '''Helper for sorting optimization runs by their final loss value.'''
-        label, (xs, ys, losses) = item
-        return losses[-9]
+        label, (xs, ys, loss) = item
+        return loss
 
-    def make_label(losses, key):
+    def make_label(loss, key):
         '''Create a legend label for an optimization run.'''
         algo, rate, mu, half, reg = key
-        slots, args = ['{:.3f}', '{}', 'm={:.3f}'], [losses[-9], algo, mu]
+        slots, args = ['{:.3f}', '{}', 'm={:.3f}'], [loss, algo, mu]
         if algo in 'SGD NAG RMSProp Adam ESGD'.split():
             slots.append('lr={:.2e}')
             args.append(rate)
@@ -88,15 +89,15 @@ def plot(results, algo=None):
             args.append(reg)
         return ' '.join(slots).format(*args)
 
-    results = ((make_label(losses, key), xs, ys)
-               for key, (xs, ys, losses)
+    results = ((make_label(loss, key), xs, ys)
+               for key, (xs, ys, loss)
                in sorted(results.items(), key=by_loss)
                if algo is None or key[0] == algo)
 
     _, ax = plt.subplots(1, 1)
 
     for color, (label, xs, ys) in zip(COLORS, results):
-        ax.plot(xs[:-9], ys[:-9], 'o-', color=color, label=label,
+        ax.plot(xs, ys, 'o-', color=color, label=label,
                 alpha=0.8, lw=2, markersize=5,
                 mew=1, mec=color, mfc='none')
 
