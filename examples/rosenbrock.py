@@ -44,10 +44,32 @@ def build_and_trace(algo, init, limit=100, **kwargs):
     kw.update(kwargs)
     xs, ys, loss = [], [], []
     for tm, _ in build(algo, init).iteropt([[]], **kw):
-        xs.append(tm['x'])
-        ys.append(tm['y'])
+        if len(init) == 2:
+            xs.append(tm['x'])
+            ys.append(tm['y'])
         loss.append(tm['loss'])
-        if len(xs) == limit:
+        if len(loss) == limit:
             break
     # Return the optimization up to any failure of patience.
     return xs[:-9], ys[:-9], loss[-9]
+
+
+def test(algos, n=10, init=[-1.1, 0], limit=100):
+    '''Run several optimizers for comparison.
+
+    Each optimizer is run a fixed number of times with random hyperparameter
+    values, and the results are yielded back to the caller (often stored in a
+    dictionary).
+
+    Returns
+    -------
+    '''
+    for algo in algos:
+        for _ in range(n):
+            mu = max(0, np.random.uniform(0, 1.2) - 0.2)
+            rate = np.exp(np.random.uniform(-8, 0))
+            half = int(np.exp(np.random.uniform(0, 4)))
+            reg = np.exp(np.random.uniform(-12, 0))
+            yield (algo, rate, mu, half, reg), rosenbrock.build_and_trace(
+                algo, init, limit, momentum=mu, learning_rate=rate,
+                rms_halflife=half, rms_regularizer=reg)
