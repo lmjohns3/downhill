@@ -152,9 +152,9 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
     def _differentiate(self, params=None):
         '''Return a sequence of gradients for our parameters.
 
-        This method applies gradient norm clipping, so if a gradient has a norm
-        that exceeds the threshold, it will be rescaled to fit within the norm
-        threshold.
+        If this optimizer has been configured with a gradient norm limit, or
+        with elementwise gradient clipping, this method applies the appropriate
+        rescaling and clipping operations before returning the gradient.
 
         Parameters
         ----------
@@ -171,10 +171,15 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         if params is None:
             params = self._params
         for param, grad in zip(params, TT.grad(self._loss, params)):
-            norm = TT.sqrt((grad * grad).sum())
-            yield param, TT.clip(
-                grad * TT.minimum(1, self.max_gradient_norm / norm),
-                -self.max_gradient_elem, self.max_gradient_elem)
+            if self.max_gradient_elem > 0:
+                limit = util.as_float(self.max_gradient_elem)
+                yield param, TT.clip(grad, -limit, limit)
+            elif self.max_gradient_norm > 0:
+                norm = TT.sqrt((grad * grad).sum())
+                limit = util.as_float(self.max_gradient_norm)
+                yield param, grad * TT.minimum(1, limit / norm)
+            else:
+                yield param, grad
 
     def set_params(self, targets):
         '''Set the values of the parameters to the given target values.
@@ -267,8 +272,8 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 patience=5,
                 validate_every=10,
                 min_improvement=0,
-                max_gradient_norm=1e10,
-                max_gradient_elem=1e10,
+                max_gradient_norm=0,
+                max_gradient_elem=0,
                 learning_rate=1e-4,
                 momentum=0,
                 nesterov=False,
@@ -310,12 +315,14 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             process sooner.
         max_gradient_norm : float, optional
             Rescale each parameter's gradient so that it has at most this L2
-            norm. Defaults to 1e10, i.e., very little rescaling.
+            norm. Set to 0 (the default) to disable norm rescaling. If
+            ``max_gradient_elem`` is also specified, then this has no effect.
         max_gradient_elem : float, optional
-            Perform elementwise clipping on the magnitude of gradient values
-            (this happens after rescaling the norm of the gradient). Defaults to
-            1e10, i.e., very little clipping. Deprecated synonyms of this
-            parameter are "max_gradient_clip" and "gradient_clip".
+            Perform elementwise clipping on the magnitude of gradient values.
+            Set to 0 (the default) to disable. If elementwise clipping is
+            enabled, norm rescaling (via ``max_gradient_norm``) will have no
+            effect. Deprecated synonyms of this parameter are
+            "max_gradient_clip" and "gradient_clip".
         learning_rate : float, optional
             Many SGD-based optimization algorithms require a learning rate
             hyperparameter that scales the gradient step. Defaults to 1e-4.
