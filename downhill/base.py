@@ -5,6 +5,7 @@ import collections
 import numpy as np
 import theano
 import theano.tensor as TT
+import warnings
 
 from . import util
 
@@ -173,7 +174,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             norm = TT.sqrt((grad * grad).sum())
             yield param, TT.clip(
                 grad * TT.minimum(1, self.max_gradient_norm / norm),
-                -self.max_gradient_clip, self.max_gradient_clip)
+                -self.max_gradient_elem, self.max_gradient_elem)
 
     def set_params(self, targets):
         '''Set the values of the parameters to the given target values.
@@ -267,7 +268,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 validate_every=10,
                 min_improvement=0,
                 max_gradient_norm=1e10,
-                max_gradient_clip=1e10,
+                max_gradient_elem=1e10,
                 learning_rate=1e-4,
                 momentum=0,
                 nesterov=False,
@@ -310,9 +311,11 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         max_gradient_norm : float, optional
             Rescale each parameter's gradient so that it has at most this L2
             norm. Defaults to 1e10, i.e., very little rescaling.
-        max_gradient_clip : float, optional
-            Perform elementwise clipping on gradient values (this happens after
-            rescaling). Defaults to 1e10, i.e., very little clipping.
+        max_gradient_elem : float, optional
+            Perform elementwise clipping on the magnitude of gradient values
+            (this happens after rescaling the norm of the gradient). Defaults to
+            1e10, i.e., very little clipping. Deprecated synonyms of this
+            parameter are "max_gradient_clip" and "gradient_clip".
         learning_rate : float, optional
             Many SGD-based optimization algorithms require a learning rate
             hyperparameter that scales the gradient step. Defaults to 1e-4.
@@ -339,7 +342,15 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         self.validate_every = validate_every
         self.min_improvement = min_improvement
         self.max_gradient_norm = util.as_float(max_gradient_norm)
-        self.max_gradient_clip = util.as_float(max_gradient_clip)
+        self.max_gradient_elem = util.as_float(max_gradient_elem)
+        if 'max_gradient_clip' in kwargs:
+            warnings.warn('Use "max_gradient_elem" instead of "max_gradient_clip"',
+                          DeprecationWarning)
+            self.max_gradient_elem = util.as_float(kwargs.pop('max_gradient_clip'))
+        if 'gradient_clip' in kwargs:
+            warnings.warn('Use "max_gradient_elem" instead of "gradient_clip"',
+                          DeprecationWarning)
+            self.max_gradient_elem = util.as_float(kwargs.pop('gradient_clip'))
         self.learning_rate = util.as_float(learning_rate)
         self.momentum = util.as_float(momentum)
         self.nesterov = nesterov
@@ -347,7 +358,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         logging.info('-- validate_every = %s', validate_every)
         logging.info('-- min_improvement = %s', min_improvement)
         logging.info('-- max_gradient_norm = %s', max_gradient_norm)
-        logging.info('-- max_gradient_clip = %s', max_gradient_clip)
+        logging.info('-- max_gradient_elem = %s', max_gradient_elem)
         logging.info('-- learning_rate = %s', learning_rate)
         logging.info('-- momentum = %s', momentum)
         logging.info('-- nesterov = %s', nesterov)
