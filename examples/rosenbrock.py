@@ -96,7 +96,7 @@ def plot(results, algo=None):
     _, ax = plt.subplots(1, 1)
 
     for color, (label, xs, ys) in zip(COLORS, results):
-        ax.plot(xs, ys, 'o-', color=color, label=label,
+        ax.plot(xs[:-9], ys[:-9], 'o-', color=color, label=label,
                 alpha=0.8, lw=2, markersize=5,
                 mew=1, mec=color, mfc='none')
 
