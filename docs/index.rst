@@ -45,17 +45,18 @@ appropriate variables and an expression for the loss, you can optimize the loss
 with respect to the variables using ``downhill``::
 
   import climate
+  import downhill
+  import numpy as np
   import theano
   import theano.tensor as TT
-  import downhill
-  import my_data_set
 
   climate.enable_default_logging()
 
-  A, B, K = 1000, 2000, 10
+  A, B, K = 100, 1000, 10
 
   x = TT.matrix('x')
 
+  y = np.arange(A * B).reshape((A, B)).astype('f')
   u = theano.shared(np.random.randn(A, K).astype('f'), name='u')
   v = theano.shared(np.random.randn(K, B).astype('f'), name='v')
 
@@ -65,14 +66,12 @@ with respect to the variables using ``downhill``::
       loss=err.mean() + abs(u).mean() + (v * v).mean(),
       params=[u, v],
       inputs=[x],
-      train=my_data_set.training,
-      valid=my_data_set.validation,
+      train=[y],
       batch_size=A,
       monitors=(
           ('u<0.1', 100 * (abs(u) < 0.1).mean()),
           ('v<0.1', 100 * (abs(v) < 0.1).mean()),
-      ),
-  )
+      ))
 
 After optimization, you can get the :math:`u` and :math:`v` matrix values out of
 the shared variables using ``u.get_value()`` and ``v.get_value()``.

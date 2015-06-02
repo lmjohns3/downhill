@@ -32,10 +32,10 @@ Once you have constructed an expression for the loss, you can optimize it using
 ``downhill``::
 
   import climate
+  import downhill
+  import numpy as np
   import theano
   import theano.tensor as TT
-  import downhill
-  import my_data_set
 
   climate.enable_default_logging()
 
@@ -43,6 +43,7 @@ Once you have constructed an expression for the loss, you can optimize it using
 
   x = TT.matrix('x')
 
+  y = np.arange(A * B).reshape((A, B)).astype('f')
   u = theano.shared(np.random.randn(A, K).astype('f'), name='u')
   v = theano.shared(np.random.randn(K, B).astype('f'), name='v')
 
@@ -52,14 +53,12 @@ Once you have constructed an expression for the loss, you can optimize it using
       loss=err.mean() + abs(u).mean() + (v * v).mean(),
       params=[u, v],
       inputs=[x],
-      train=my_data_set.training,
-      valid=my_data_set.validation,
+      train=[y],
       batch_size=A,
       monitors=(
           ('u<0.1', 100 * (abs(u) < 0.1).mean()),
           ('v<0.1', 100 * (abs(v) < 0.1).mean()),
-      ),
-  )
+      ))
 
 More Information
 ================
