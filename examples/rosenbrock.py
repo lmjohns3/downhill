@@ -43,14 +43,6 @@ def build(algo):
         monitor_gradients=True)
 
 
-# Default hyperparameters for some learning algorithms. It would be fun to
-# include these in the hyperparameter search but for now we'll just keep them
-# fixed.
-DEFAULTS = dict(
-    ADADELTA=dict(rms_halflife=7, rms_regularizer=1e-2, max_gradient_clip=1e10),
-    ESGD=dict(rms_halflife=50, rms_regularizer=1e-2, max_gradient_clip=1e10),
-)
-
 def build_and_trace(algo, limit=100, **kwargs):
     '''Run an optimizer on the rosenbrock function. Return xs, ys, and losses.
 
@@ -59,12 +51,7 @@ def build_and_trace(algo, limit=100, **kwargs):
     monitor values that were computed during that iteration. Here we build an
     optimizer and then run it for a fixed number of iterations.
     '''
-    kw = dict(
-        max_gradient_clip=1,
-        min_improvement=0,
-        patience=100,
-    )
-    kw.update(DEFAULTS.get(algo, {}))
+    kw = dict(min_improvement=0, patience=100)
     kw.update(kwargs)
     xs, ys, loss = [], [], []
     for tm, _ in build(algo).iteropt([[]], **kw):
@@ -76,12 +63,36 @@ def build_and_trace(algo, limit=100, **kwargs):
     return xs, ys, loss
 
 
-def plot(results):
+def plot(results, algo=None):
     '''Plot a set of results on top of a contour of the banana function.
 
-    The results should be a sequence of (label, xs, ys) -- one of these tuples
-    for each optimizer that we want to plot.
+    The results should be a dictionary mapping optimization runs to (xs, ys,
+    losses) -- one entry for each optimizer run that we want to plot.
     '''
+    def by_loss(item):
+        '''Helper for sorting optimization runs by their final loss value.'''
+        label, (xs, ys, losses) = item
+        return losses[-1]
+
+    def make_label(losses, key):
+        '''Create a legend label for an optimization run.'''
+        algo, rate, mu, half, reg = key
+        slots, args = ['{:.3f}', '{}', 'm={:.3f}'], [losses[-1], algo, mu]
+        if algo in 'SGD NAG RMSProp Adam ESGD'.split():
+            slots.append('lr={:.2e}')
+            args.append(rate)
+        if algo in 'RMSProp ADADELTA ESGD'.split():
+            slots.append('rmsh={}')
+            args.append(half)
+            slots.append('rmsr={:.2e}')
+            args.append(reg)
+        return ' '.join(slots).format(*args)
+
+    results = ((make_label(losses, key), xs, ys)
+               for key, (xs, ys, losses)
+               in sorted(results.items(), key=by_loss)
+               if algo is None or key[0] == algo)
+
     _, ax = plt.subplots(1, 1)
 
     for color, (label, xs, ys) in zip(COLORS, results):
@@ -90,22 +101,16 @@ def plot(results):
                 mew=1, mec=color, mfc='none')
 
     # make a contour plot of the rosenbrock function surface.
-    X, Y = np.meshgrid(np.linspace(-1.2, 1.2, 31), np.linspace(-0.7, 1.7, 31))
+    X, Y = np.meshgrid(np.linspace(-1.3, 1.3, 31), np.linspace(-0.9, 1.7, 31))
     Z = 100 * (Y - X ** 2) ** 2 + (1 - X) ** 2
     ax.plot([1], [1], 'x', mew=3, markersize=10, color='#111111')
-    ax.contourf(X, Y, Z, np.logspace(-1, 2.7, 31), cmap='gray_r')
+    ax.contourf(X, Y, Z, np.logspace(-1, 3, 31), cmap='gray_r')
 
-    ax.set_xlim(-1.2, 1.2)
-    ax.set_ylim(-0.7, 1.7)
+    ax.set_xlim(-1.3, 1.3)
+    ax.set_ylim(-0.9, 1.7)
 
     plt.legend(loc='lower right')
     plt.show()
-
-
-def min_loss(item):
-    '''A helper for sorting optimization results by loss.'''
-    label, (xs, ys, loss) = item
-    return min(loss)
 
 
 # Here we run several optimizers for comparison. Each optimizer is run a fixed
@@ -114,16 +119,15 @@ def min_loss(item):
 
 results = {}
 for algo in 'SGD NAG RMSProp RProp Adam ADADELTA ESGD'.split():
-    for _ in range(5):
-        mu = np.random.choice([0, 0.1, 0.5, 0.9])
-        rate = np.random.choice([1e-1, 1e-2, 1e-3, 1e-4])
-        label = '{} µ={} r={}'.format(algo, mu, rate)
-        results[label] = build_and_trace(algo, momentum=mu, learning_rate=rate)
+    for _ in range(10):
+        mu = max(0, np.random.uniform(0, 1.2) - 0.2)
+        rate = np.exp(np.random.uniform(-8, 0))
+        half = int(np.exp(np.random.uniform(0, 4)))
+        reg = np.exp(np.random.uniform(-12, 0))
+        results[(algo, rate, mu, half, reg)] = build_and_trace(
+            algo, momentum=mu, learning_rate=rate, rms_halflife=half,
+            rms_regularizer=reg)
     # Uncomment below to plot results for just this optimization algorithm.
-    #plot((label, xs, ys) for label, (xs, ys, _)
-    #     in sorted(results.items(), key=min_loss)
-    #     if label.startswith(algo))
+    #plot(results, algo)
 
-plot(('({:5f}) {}'.format(min(loss), label), xs, ys)
-     for label, (xs, ys, loss)
-     in sorted(results.items(), key=min_loss))
+plot(results)
