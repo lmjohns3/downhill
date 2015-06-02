@@ -72,12 +72,12 @@ def plot(results, algo=None):
     def by_loss(item):
         '''Helper for sorting optimization runs by their final loss value.'''
         label, (xs, ys, losses) = item
-        return losses[-1]
+        return losses[-9]
 
     def make_label(losses, key):
         '''Create a legend label for an optimization run.'''
         algo, rate, mu, half, reg = key
-        slots, args = ['{:.3f}', '{}', 'm={:.3f}'], [losses[-1], algo, mu]
+        slots, args = ['{:.3f}', '{}', 'm={:.3f}'], [losses[-9], algo, mu]
         if algo in 'SGD NAG RMSProp Adam ESGD'.split():
             slots.append('lr={:.2e}')
             args.append(rate)
