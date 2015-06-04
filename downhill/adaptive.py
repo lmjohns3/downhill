@@ -296,7 +296,7 @@ class ESGD(RMSProp):
 class Adam(RMSProp):
     r'''Adam optimizes using per-parameter learning rates.
 
-    The ESGD method uses the same general strategy as all first-order
+    The Adam method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small
     parameter adjustments iteratively using local derivative information.
 
