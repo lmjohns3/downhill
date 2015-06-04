@@ -63,6 +63,14 @@ def test(algos, n=10, init=[-1.1, 0], limit=100):
 
     Returns
     -------
+    results : sequence of (key, value) pairs
+        A sequence of results from running tests. Each result contains a "key"
+        that describes the test run and a "value" that contains the results from
+        the run. The key is a tuple containing (a) the algorithm, (b) the
+        learning rate, (c) the momentum, (d) the RMS halflife, and (e) the RMS
+        regularizer. The value is a tuple containing the (a) x-values and (b)
+        y-values during the optimization, and (c) the loss value. (The x- and
+        y-value are only non-empty for 2D experiments.)
     '''
     for algo in algos:
         for _ in range(n):
