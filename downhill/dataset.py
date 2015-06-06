@@ -40,7 +40,7 @@ class Dataset:
     prohibitively expensive to assemble in memory as a single ``numpy`` array.
     To handle these cases, this class can also handle a dataset that is provided
     via a Python callable. For more information on using callables to provide
-    data to your model, see :ref:`quickstart-using-callables`.
+    data to your model, see :ref:`data-using-callables`.
 
     Parameters
     ----------

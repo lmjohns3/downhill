@@ -87,5 +87,5 @@ Documentation
 .. toctree::
    :maxdepth: 2
 
-   quickstart
+   guide
    reference
