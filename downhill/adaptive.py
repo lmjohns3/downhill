@@ -348,8 +348,8 @@ class Adam(RMSProp):
                  beta2_halflife=69,
                  **kwargs):
         self.beta1_decay = as_float(beta1_decay)
-        self.beta1 = as_float(np.exp(-np.log(2) / kwargs.get('beta1_halflife', 7)))
-        self.beta2 = as_float(np.exp(-np.log(2) / kwargs.get('beta2_halflife', 69)))
+        self.beta1 = as_float(np.exp(-np.log(2) / beta1_halflife))
+        self.beta2 = as_float(np.exp(-np.log(2) / beta2_halflife))
         super(Adam, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
