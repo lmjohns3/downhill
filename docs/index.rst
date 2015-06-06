@@ -2,6 +2,9 @@
 ``DOWNHILL``
 ============
 
+.. figure:: _static/rosenbrock-nag.png
+   :figclass: banana
+
 The ``downhill`` package provides algorithms for minimizing scalar loss
 functions that are defined using Theano_.
 
@@ -14,6 +17,8 @@ Several optimization algorithms are included:
   :class:`Equilibrated SGD <downhill.adaptive.ESGD>`, :class:`Adam
   <downhill.adaptive.Adam>`, and :class:`ADADELTA <downhill.adaptive.ADADELTA>`.
 - Wrappers for several algorithms from ``scipy.optimize.minimize``.
+
+Most algorithms permit the use of momentum to accelerate progress.
 
 The source code for ``downhill`` lives at http://github.com/lmjohns3/downhill,
 the documentation lives at http://downhill.readthedocs.org, and announcements
