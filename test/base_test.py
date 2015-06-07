@@ -58,3 +58,15 @@ class TestOptimizer:
             assert vm['v<-1'] == 0
             if i == 2:
                 break
+
+    def test_gradient_clip(self):
+        opt, data = util.build_rosen('tester')
+        for _ in opt.iteropt(data, gradient_clip=1):
+            assert opt.max_gradient_elem == 1
+            break
+        for _ in opt.iteropt(data, max_gradient_clip=2):
+            assert opt.max_gradient_elem == 2
+            break
+        for _ in opt.iteropt(data, max_gradient_elem=3):
+            assert opt.max_gradient_elem == 3
+            break

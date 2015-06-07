@@ -5,7 +5,9 @@ import util
 
 class TestSGD:
     def test_rosen(self):
-        util.assert_progress(*util.build_rosen('sgd'))
+        util.assert_progress(
+            *util.build_rosen('sgd'),
+            monitor_gradients=True)
 
     def test_factor(self):
         util.assert_progress(
@@ -16,7 +18,7 @@ class TestSGD:
     def test_factor_nesterov(self):
         util.assert_progress(
             *util.build_factor('sgd'),
-            max_gradient_elem=1)
+            max_gradient_norm=1)
 
     def test_default_params(self):
         opt, data = util.build_rosen('sgd')
