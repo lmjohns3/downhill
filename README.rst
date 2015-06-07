@@ -14,7 +14,6 @@ Several optimization algorithms are included:
 - First-order stochastic gradient descent: SGD_ and NAG_.
 - First-order stochastic techniques with adaptive learning rates: RProp_,
   RMSProp_, `Equilibrated SGD`_, Adam_, and ADADELTA_.
-- Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
 .. _Theano: http://deeplearning.net/software/theano/
 

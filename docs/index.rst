@@ -16,7 +16,6 @@ Several optimization algorithms are included:
   <downhill.adaptive.RProp>`, :class:`RMSProp <downhill.adaptive.RMSProp>`,
   :class:`Equilibrated SGD <downhill.adaptive.ESGD>`, :class:`Adam
   <downhill.adaptive.Adam>`, and :class:`ADADELTA <downhill.adaptive.ADADELTA>`.
-- Wrappers for several algorithms from ``scipy.optimize.minimize``.
 
 Most algorithms permit the use of momentum to accelerate progress.
 
