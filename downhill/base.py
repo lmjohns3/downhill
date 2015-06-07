@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 '''This module defines a base class for optimization techniques.'''
 
 import climate
