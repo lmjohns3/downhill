@@ -17,7 +17,7 @@ Several optimization algorithms are included:
   :class:`Equilibrated SGD <downhill.adaptive.ESGD>`, :class:`Adam
   <downhill.adaptive.Adam>`, and :class:`ADADELTA <downhill.adaptive.ADADELTA>`.
 
-Most algorithms permit the use of momentum to accelerate progress.
+Most algorithms permit the use of regular or Nesterov-style momentum as well.
 
 The source code for ``downhill`` lives at http://github.com/lmjohns3/downhill,
 the documentation lives at http://downhill.readthedocs.org, and announcements

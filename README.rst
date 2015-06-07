@@ -15,6 +15,8 @@ Several optimization algorithms are included:
 - First-order stochastic techniques with adaptive learning rates: RProp_,
   RMSProp_, `Equilibrated SGD`_, Adam_, and ADADELTA_.
 
+Most algorithms permit the use of regular or Nesterov-style momentum as well.
+
 .. _Theano: http://deeplearning.net/software/theano/
 
 .. _SGD: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.SGD.html
