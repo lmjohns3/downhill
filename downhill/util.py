@@ -20,9 +20,6 @@ class Registrar(type):
     def build(cls, key, *args, **kwargs):
         return cls._registry[key.lower()](*args, **kwargs)
 
-    def get_class(cls, key):
-        return cls._registry[key.lower()]
-
     def is_registered(cls, key):
         return key.lower() in cls._registry
 
@@ -62,19 +59,3 @@ def as_float(x):
         A symbolic variable cast as a ``floatX`` value.
     '''
     return TT.cast(x, theano.config.floatX)
-
-
-def as_float32(x):
-    '''Cast a floating point value to a 32-bit numpy float.
-
-    Parameters
-    ----------
-    x : float
-        A value to cast to floating point.
-
-    Returns
-    -------
-    x : np.float32
-        The given value as a 32-bit float.
-    '''
-    return np.float32(x)
