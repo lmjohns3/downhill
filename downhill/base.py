@@ -62,13 +62,12 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
     inputs : list of Theano variables
         Symbolic variables required to compute the loss.
     updates : list of update pairs, optional
-        A list of pairs providing updates for the internal of the loss
+        A list of pairs providing updates for the internals of the loss
         computation. Normally this is empty, but it can be provided if the loss,
         for example, requires an update to an internal random number generator.
-    monitors : dict or sequence of (str, Theano expression) tuples, optional
+    monitors : sequence of (str, Theano expression) tuples, optional
         Additional values to monitor during optimization. These must be provided
-        as either a sequence of (name, expression) tuples, or as a dictionary
-        mapping string names to Theano expressions.
+        as a sequence of (name, expression) tuples.
     monitor_gradients : bool, optional
         If True, add monitors to log the norms of the parameter gradients during
         optimization. Defaults to False.
@@ -80,8 +79,6 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         self._params = params
         self._inputs = inputs
         self._updates = updates
-        if hasattr(updates, 'items') and callable(updates.items):
-            self._updates = updates.items()
 
         self._shapes = [p.get_value(borrow=True).shape for p in self._params]
         self._counts = [np.prod(s) for s in self._shapes]
@@ -93,8 +90,6 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         self._best_loss = 1e100
         self._best_params = [p.get_value().copy() for p in self._params]
 
-        if hasattr(monitors, 'items') and callable(monitors.items):
-            monitors = monitors.items()
         self._monitor_exprs = [self._loss]
         self._monitor_names = ['loss']
         for name, monitor in monitors:
