@@ -100,7 +100,7 @@ class Dataset:
         if not self.iteration_size:
             try:
                 self.iteration_size = len(inputs)
-            except TypeError:  # has no len
+            except TypeError, AttributeError:  # has no len
                 self.iteration_size = 100
         logging.info('%s: %d mini-batches from callable',
                      self.name, self.iteration_size)
