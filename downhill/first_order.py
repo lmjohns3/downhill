@@ -91,10 +91,10 @@ class NAG(SGD):
        http://www.cs.toronto.edu/~fritz/absps/momentum.pdf
 
     .. [Nest83] Y. Nesterov. (1983) "A method of solving a convex programming
-       problem with convergence rate O(1/sqr(k))." Soviet
-       Mathematics Doklady, 27:372–376.
+       problem with convergence rate O(1/sqr(k))." Soviet Mathematics Doklady,
+       27:372–376.
     '''
 
-    def _prepare(self, **kwargs):
-        super(NAG, self)._prepare(**kwargs)
-        self.nesterov = True
+    def iteropt(self, *args, **kwargs):
+        kwargs['nesterov'] = True
+        return super(NAG, self).iteropt(*args, **kwargs)
