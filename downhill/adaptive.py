@@ -19,14 +19,14 @@ __all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD', 'Adam']
 
 
 class RProp(Optimizer):
-    r'''Optimization algorithm using resilient backpropagation.
+    r'''Resilient backpropagation optimizer.
 
-    Like many stochastic optimizers, the RProp method takes small steps in
-    parameter space using local gradient information. Unlike :class:`SGD
-    <downhill.first_order.SGD>`, however, in RProp, only the signs of the
-    gradients are taken into account when making parameter updates. That is, the
-    step size for each parameter is independent of the magnitude of the gradient
-    for that parameter.
+    The RProp method takes small steps in parameter space using local gradient
+    information. RProp is unlike "vanilla" first-order techniques like
+    :class:`SGD <downhill.first_order.SGD>`, however, because only the signs of
+    the gradients are taken into account when making parameter updates. That is,
+    the step size for each parameter is independent of the magnitude of the
+    gradient for that parameter.
 
     To accomplish this, RProp maintains a separate learning rate for every
     parameter in the model, and adjusts this learning rate based on the
@@ -63,13 +63,14 @@ class RProp(Optimizer):
     References
     ----------
 
-    .. [Riedmiller92] M. Riedmiller & H. Braun. (1992) "Rprop - A Fast Adaptive
+    .. [Ried92] M. Riedmiller & H. Braun. (1992) "Rprop - A Fast Adaptive
        Learning Algorithm." In Proceedings of the International Symposium on
        Computer and Information Science VII.
 
     .. [Igel00] C. Igel & M. Hüsken. (2000) "Improving the Rprop Learning
-       Algorithm." In Proceedings of the Second International Symposium on Neural
-       Computation. http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.17.1332
+       Algorithm." In Proceedings of the Second International Symposium on
+       Neural Computation.
+       http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.17.1332
     '''
 
     def _prepare(self,
@@ -104,7 +105,7 @@ class RProp(Optimizer):
 
 
 class RMSProp(Optimizer):
-    r'''RMSProp optimizes scalar losses using scaled gradient steps.
+    r'''RMSProp optimizer.
 
     The RMSProp method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small
@@ -115,7 +116,10 @@ class RMSProp(Optimizer):
     magnitudes is maintained as well. At each update, the EWMA is used to
     compute the root-mean-square (RMS) gradient value that's been seen in the
     recent past. The actual gradient is normalized by this RMS scaling factor
-    before being applied to update the parameters.
+    before being applied to update the parameters. Intuitively, this makes
+    RMSProp take steps near 1 whenever the gradient is of constant magnitude,
+    and larger steps whenever the local scale of the gradient starts to
+    increase.
 
     .. math::
         \begin{eqnarray*}
@@ -139,7 +143,7 @@ class RMSProp(Optimizer):
     inversely with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln
     2}{h}}`.
 
-    The implementation here is taken from [Graves13]_, equations (38)--(45).
+    The implementation here is taken from [Grav13]_, equations (38)--(45).
     Graves' implementation in particular seems to have introduced the
     :math:`f_t` terms into the RMS computation; these terms appear to act as a
     sort of momentum for the RMS values.
@@ -147,7 +151,7 @@ class RMSProp(Optimizer):
     References
     ----------
 
-    .. [Graves13] A. Graves. (2013) "Generating Sequences With Recurrent Neural
+    .. [Grav13] A. Graves. (2013) "Generating Sequences With Recurrent Neural
        Networks." http://arxiv.org/abs/1308.0850
     '''
 
@@ -170,7 +174,7 @@ class RMSProp(Optimizer):
 
 
 class ADADELTA(RMSProp):
-    r'''ADADELTA optimizes scalar losses scaled stochastic gradient steps.
+    r'''ADADELTA optimizer.
 
     The ADADELTA method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small
@@ -210,7 +214,7 @@ class ADADELTA(RMSProp):
     References
     ----------
 
-    .. [Zeiler12] M. Zeiler. (2012) "ADADELTA: An adaptive learning rate method."
+    .. [Zeil12] M. Zeiler. (2012) "ADADELTA: An adaptive learning rate method."
        http://arxiv.org/abs/1212.5701
     '''
 
@@ -226,18 +230,30 @@ class ADADELTA(RMSProp):
 
 
 class ESGD(RMSProp):
-    r'''Equilibrated SGD computes a diagonal preconditioner for gradient descent.
+    r'''Equilibrated SGD computes a diagonal Hessian preconditioner.
 
     The ESGD method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small
     parameter adjustments iteratively using local derivative information.
 
     The difference here is that as gradients are computed during each parameter
-    update, an exponentially-weighted moving average (EWMA) of diagonal
-    preconditioner estimates is maintained as well. At each update, the EWMA is
-    used to compute the root-mean-square (RMS) diagonal preconditioner value
-    that's been seen in the recent past. The actual gradient is normalized by
-    this preconditioner before being applied to update the parameters.
+    update, an exponentially-weighted moving average (EWMA) of estimates of the
+    diagonal of the Hessian (the matrix of second derivatives) is maintained as
+    well. At each update, the EWMA is used to compute the root-mean-square (RMS)
+    diagonal value that's been seen in the recent past. The actual gradient is
+    scaled by the inverse of this diagonal preconditioner before being applied
+    to update the parameters. Intuitively, this causes the algorithm to
+    "reshape" the loss function in parameter space, such that directions of
+    steep gradient (i.e., large diagonal values) and directions of shallow
+    gradient (i.e., small diagonal values) are scaled to be approximately the
+    same slope.
+
+    The diagonal estimates are computed using a nice trick: A vector :math:`r
+    \sim \mathcal{N}(0, 1)` consisting of standard normal values is sampled
+    randomly at each update step, and the value of :math:`Hr` is computed
+    symbolically. These vector values tend to approximate the diagonal of the
+    Hessian. Because :math:`Hr` is itself a vector, the full Hessian :math:`H`
+    does not need to be computed or stored.
 
     .. math::
         \begin{eqnarray*}
@@ -252,18 +268,6 @@ class ESGD(RMSProp):
     learning method effectively maintains a sort of parameter-specific learning
     rate for each parameter in the loss.
 
-    The primary difference between this method and :class:`RMSProp` is that ESGD
-    treats the normalizing fraction explicitly as a preconditioner for the
-    diaonal of the Hessian, and estimates this diagonal by drawing a vector of
-    standard normal values at every training step.
-
-    The primary difference between this implementation and the algorithm
-    described in the paper (see below) is the use of an EWMA to decay the
-    diagonal values over time, while in the paper the diagonal is divided by the
-    training iteration. The EWMA halflife should be set to something reasonably
-    large to ensure that this method emulates the method described in the
-    original paper.
-
     In this implementation, :math:`\epsilon` regularizes the RMS values; it is
     is specified using the ``rms_regularizer`` parameter.
 
@@ -272,12 +276,19 @@ class ESGD(RMSProp):
     inversely with the halflife :math:`h`: :math:`\gamma = e^{\frac{-\ln
     2}{h}}`.
 
+    The primary difference between this implementation and the algorithm
+    described in the paper (see below) is the use of an EWMA to decay the
+    diagonal values over time, while in the paper the diagonal is divided by the
+    training iteration. The EWMA halflife should be set to something reasonably
+    large to ensure that this method emulates the method described in the
+    original paper.
+
     References
     ----------
 
-    .. [Dauphin14] Y. Dauphin, H. de Vries, J. Chung & Y. Bengio. (2014)
-       "RMSProp and equilibrated adaptive learning rates for non-convex
-       optimization." http://arxiv.org/abs/1502.04390
+    .. [Daup14] Y. Dauphin, H. de Vries, J. Chung & Y. Bengio. (2014) "RMSProp
+       and equilibrated adaptive learning rates for non-convex optimization."
+       http://arxiv.org/abs/1502.04390
     '''
 
     def __init__(self, *args, **kwargs):
@@ -294,7 +305,7 @@ class ESGD(RMSProp):
 
 
 class Adam(RMSProp):
-    r'''Adam optimizes using per-parameter learning rates.
+    r'''Adam optimizer using unbiased gradient moment estimates.
 
     The Adam method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small
@@ -333,12 +344,12 @@ class Adam(RMSProp):
     decay :math:`\lambda` for the :math:`\beta_1` EWMA is provided by the
     ``beta1_decay`` keyword argument.
 
-    The implementation here is taken from Algorithm 1 of [Kin15]_.
+    The implementation here is taken from Algorithm 1 of [King15]_.
 
     References
     ----------
 
-    .. [Kin15] D. Kingma & J. Ba. (ICLR 2015) "Adam: A Method for
+    .. [King15] D. Kingma & J. Ba. (ICLR 2015) "Adam: A Method for
        Stochastic Optimization." http://arxiv.org/abs/1412.6980
     '''
 

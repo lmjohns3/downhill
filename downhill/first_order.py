@@ -33,6 +33,14 @@ class SGD(Optimizer):
     from previous steps as well, which in practice is thought to have the effect
     of incorporating some information about second-order derivatives of the loss
     surface.
+
+    References
+    ----------
+
+    .. [Rume86] D. E. Rumelhart, G. E. Hinton, & R. J. Williams. (1986)
+       "Learning representations by back-propagating errors". Nature 323
+       (6088):533–536. doi:10.1038/323533a0
+       http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html
     '''
 
     def _get_updates_for(self, param, grad):
@@ -73,13 +81,18 @@ class NAG(SGD):
 
     In theory, this helps correct for oversteps during learning: If momentum
     would lead us to overshoot, then the gradient at that overshot place will
-    point backwards, toward where we came from. See [1]_ for details on this idea.
+    point backwards, toward where we came from. See [Suts13]_ for a particularly
+    clear exposition of this idea.
 
     References
     ----------
-    .. [1] I. Sutskever, J. Martens, G. Dahl, & G. Hinton. (ICML 2013) "On the
-       importance of initialization and momentum in deep learning."
-       http://jmlr.csail.mit.edu/proceedings/papers/v28/sutskever13.pdf
+    .. [Suts13] I. Sutskever, J. Martens, G. Dahl, & G. Hinton. (ICML 2013) "On
+       the importance of initialization and momentum in deep learning."
+       http://www.cs.toronto.edu/~fritz/absps/momentum.pdf
+
+    .. [Nest83] Y. Nesterov. (1983) "A method of solving a convex programming
+       problem with convergence rate O(1/sqr(k))." Soviet
+       Mathematics Doklady, 27:372–376.
     '''
 
     def _prepare(self, **kwargs):
