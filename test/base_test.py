@@ -1,4 +1,5 @@
 import downhill
+import numpy as np
 
 import util
 
@@ -70,3 +71,14 @@ class TestOptimizer:
         for _ in opt.iteropt(data, max_gradient_elem=3):
             assert opt.max_gradient_elem == 3
             break
+
+    def test_set_params(self):
+        opt, _ = util.build_rosen('tester')
+        opt.set_params([[1, 2]])
+        assert np.allclose(opt._params[0].get_value(), [1, 2])
+
+    def test_set_best_params(self):
+        opt, _ = util.build_rosen('tester')
+        opt._best_params = [[1, 2]]
+        opt.set_params('best')
+        assert np.allclose(opt._params[0].get_value(), [1, 2])
