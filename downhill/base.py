@@ -14,7 +14,7 @@ from . import util
 logging = climate.get_logger(__name__)
 
 
-def build(algo, loss, params, inputs, updates=(), monitors=(),
+def build(algo, loss, params=None, inputs=None, updates=(), monitors=(),
           monitor_gradients=False):
     '''Construct an optimizer by name.
 
@@ -24,10 +24,12 @@ def build(algo, loss, params, inputs, updates=(), monitors=(),
         The name of the optimization algorithm to build.
     loss : Theano expression
         Loss function to minimize. This must be a scalar-valued expression.
-    params : list of Theano variables
-        Symbolic variables to adjust to minimize the loss.
-    inputs : list of Theano variables
-        Symbolic variables required to compute the loss.
+    params : list of Theano variables, optional
+        Symbolic variables to adjust to minimize the loss. If not given, these
+        will be computed automatically by walking the computation graph.
+    inputs : list of Theano variables, optional
+        Symbolic variables required to compute the loss. If not given, these
+        will be computed automatically by walking the computation graph.
     updates : list of update pairs, optional
         A list of pairs providing updates for the internal of the loss
         computation. Normally this is empty, but it can be provided if the loss,
@@ -57,10 +59,12 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
     ----------
     loss : Theano expression
         Loss function to minimize. This must be a scalar-valued expression.
-    params : list of Theano variables
-        Symbolic variables to adjust to minimize the loss.
-    inputs : list of Theano variables
-        Symbolic variables required to compute the loss.
+    params : list of Theano variables, optional
+        Symbolic variables to adjust to minimize the loss. If not given, these
+        will be computed automatically by walking the computation graph.
+    inputs : list of Theano variables, optional
+        Symbolic variables required to compute the loss. If not given, these
+        will be computed automatically by walking the computation graph.
     updates : list of update pairs, optional
         A list of pairs providing updates for the internals of the loss
         computation. Normally this is empty, but it can be provided if the loss,
@@ -73,11 +77,13 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         optimization. Defaults to False.
     '''
 
-    def __init__(self, loss, params, inputs, updates=(), monitors=(),
+    def __init__(self, loss, params=None, inputs=None, updates=(), monitors=(),
                  monitor_gradients=False):
+        inputs_, params_ = util.find_inputs_and_params(loss)
+
         self._loss = loss
-        self._params = params
-        self._inputs = inputs
+        self._params = params or params_
+        self._inputs = inputs or inputs_
         self._updates = updates
 
         self._shapes = [p.get_value(borrow=True).shape for p in self._params]

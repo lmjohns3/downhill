@@ -4,26 +4,26 @@ from .dataset import Dataset
 from .first_order import *
 
 
-def minimize(loss, params, inputs, train, valid=None,
-             algo='rmsprop', updates=(), monitors=(),
-             monitor_gradients=False, batch_size=32,
-             train_batches=None, valid_batches=None,
-             **kwargs):
+def minimize(loss, train, valid=None, params=None, inputs=None, algo='rmsprop',
+             updates=(), monitors=(), monitor_gradients=False, batch_size=32,
+             train_batches=None, valid_batches=None, **kwargs):
     '''Minimize a loss function with respect to some symbolic parameters.
 
     Parameters
     ----------
     loss : Theano expression
         Loss function to minimize. This must be a scalar-valued expression.
-    params : list of Theano variables
-        Symbolic variables to adjust to minimize the loss.
-    inputs : list of Theano variables
-        Symbolic variables required to compute the loss.
     train : :class:`Dataset`, ndarray, or callable
         Dataset to use for computing gradient updates.
     valid : :class:`Dataset`, ndarray, or callable, optional
         Dataset to use for validating the minimization process. The training
         dataset is used if this is not provided.
+    params : list of Theano variables, optional
+        Symbolic variables to adjust to minimize the loss. If not given, these
+        will be computed automatically by walking the computation graph.
+    inputs : list of Theano variables, optional
+        Symbolic variables required to compute the loss. If not given, these
+        will be computed automatically by walking the computation graph.
     algo : str, optional
         Name of the minimization algorithm to use. Must be one of the strings
         that can be passed to :func:`build`. Defaults to ``'rmsprop'``.
