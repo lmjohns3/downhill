@@ -9,9 +9,6 @@ def build_rosen(algo):
     return downhill.build(
         algo,
         loss=(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2).sum(),
-        params=[x],
-        inputs=[],
-        updates=(),
         monitors=[('x', x[:-1].sum()), ('y', x[1:].sum())]), [[]]
 
 
@@ -25,8 +22,6 @@ def build_factor(algo):
     return downhill.build(
         algo,
         loss=TT.sum(TT.sqr(x - TT.dot(u, v))),
-        params=[u, v],
-        inputs=[x],
         monitors=[
             ('u<1', (u < 1).mean()),
             ('u<-1', (u < -1).mean()),
