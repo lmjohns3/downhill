@@ -163,9 +163,9 @@ class Dataset:
             Shuffle the batches in this dataset if the iteration reaches the end
             of the batch list. Defaults to True.
 
-        Returns
-        -------
-        batches : sequence of data batches
+        Yields
+        ------
+        batches : data batches
             A sequence of batches---often from a training, validation, or test
             dataset.
         '''
