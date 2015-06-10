@@ -15,7 +15,7 @@ Several optimization algorithms are included:
 - First-order stochastic techniques with adaptive learning rates: RProp_,
   RMSProp_, `Equilibrated SGD`_, Adam_, and ADADELTA_.
 
-Most algorithms permit the use of regular or Nesterov-style momentum as well.
+All algorithms permit the use of regular or Nesterov-style momentum as well.
 
 .. _Theano: http://deeplearning.net/software/theano/
 
@@ -32,9 +32,10 @@ Example Code
 
 Let's say you have 100 samples of 1000-dimensional data, and you want to
 represent your data as 100 coefficients in a 10-dimensional basis. This is
-pretty straightforward to model using Theano, using a matrix multiplication.
-Once you have constructed an expression for the loss, you can optimize it using
-``downhill``::
+pretty straightforward to model using Theano, using a matrix multiplication as
+the data model, a squared-error term for optimization, and a sparse regularizer
+to encourage small coefficient values. Once you have constructed an expression
+for the loss, you can optimize it with a single call to ``downhill.minimize``::
 
   import climate
   import downhill
@@ -46,24 +47,28 @@ Once you have constructed an expression for the loss, you can optimize it using
 
   A, B, K = 100, 1000, 10
 
-  x = TT.matrix('x')
-
-  y = np.arange(A * B).reshape((A, B)).astype('f')
+  # Set up a matrix factorization problem to optimize.
   u = theano.shared(np.random.randn(A, K).astype('f'), name='u')
   v = theano.shared(np.random.randn(K, B).astype('f'), name='v')
-
+  x = TT.matrix('x')
   err = TT.sqr(x - TT.dot(u, v))
+
+  # Minimize the regularized loss with respect to a data matrix.
+  y = np.arange(A * B).reshape((A, B)).astype('f')
 
   downhill.minimize(
       loss=err.mean() + abs(u).mean() + (v * v).mean(),
-      params=[u, v],
-      inputs=[x],
       train=[y],
-      batch_size=A,
-      monitors=(
-          ('u<0.1', 100 * (abs(u) < 0.1).mean()),
-          ('v<0.1', 100 * (abs(v) < 0.1).mean()),
-      ))
+      batch_size=A,  # Process y as a single batch.
+      max_gradient_norm=1,  # Prevent gradient explosion!
+      monitors=(('err', err),  # Monitor during optimization.
+                ('|u|<0.1', (abs(u) < 0.1).mean()),
+                ('|v|<0.1', (abs(v) < 0.1).mean())),
+      monitor_gradients=True)
+
+  # Print out the optimized coefficients u and basis v.
+  print('u =', u.get_value())
+  print('v =', v.get_value())
 
 More Information
 ================
