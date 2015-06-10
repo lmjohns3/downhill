@@ -120,9 +120,9 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
     def _get_updates(self):
         '''Get parameter update expressions for performing optimization.
 
-        Returns
-        -------
-        updates : sequence of (parameter, expression) tuples
+        Yields
+        ------
+        updates : (parameter, expression) tuples
             A sequence of parameter updates to be applied during optimization.
         '''
         for param, grad in self._differentiate():
@@ -166,9 +166,9 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             Return the gradient with respect to these parameters. Defaults to
             all parameters that the optimizer knows about.
 
-        Returns
-        -------
-        pairs : sequence of (param, grad) tuples
+        Yields
+        ------
+        pairs : (param, grad) tuples
             Generates a sequence of tuples representing each of the parameters
             requested and the corresponding Theano gradient expressions.
         '''
@@ -345,8 +345,8 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             ``momentum`` is zero. See :class:`NAG <downhill.NAG>` for a
             description of Nesterov momentum.
 
-        Returns
-        -------
+        Yields
+        ------
         train_monitors : dict
             A dictionary mapping monitor names to values, evaluated on the
             training dataset.

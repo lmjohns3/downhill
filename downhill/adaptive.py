@@ -21,6 +21,9 @@ __all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD', 'Adam']
 class RProp(Optimizer):
     r'''Resilient backpropagation optimizer.
 
+    Notes
+    -----
+
     The RProp method takes small steps in parameter space using local gradient
     information. RProp is unlike "vanilla" first-order techniques like
     :class:`SGD <downhill.first_order.SGD>`, however, because only the signs of
@@ -107,6 +110,9 @@ class RProp(Optimizer):
 class RMSProp(Optimizer):
     r'''RMSProp optimizer.
 
+    Notes
+    -----
+
     The RMSProp method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small
     parameter adjustments iteratively using local derivative information.
@@ -176,6 +182,9 @@ class RMSProp(Optimizer):
 class ADADELTA(RMSProp):
     r'''ADADELTA optimizer.
 
+    Notes
+    -----
+
     The ADADELTA method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small
     parameter adjustments iteratively using local derivative information.
@@ -231,6 +240,9 @@ class ADADELTA(RMSProp):
 
 class ESGD(RMSProp):
     r'''Equilibrated SGD computes a diagonal Hessian preconditioner.
+
+    Notes
+    -----
 
     The ESGD method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small
@@ -306,6 +318,9 @@ class ESGD(RMSProp):
 
 class Adam(RMSProp):
     r'''Adam optimizer using unbiased gradient moment estimates.
+
+    Notes
+    -----
 
     The Adam method uses the same general strategy as all first-order
     stochastic gradient methods, in the sense that these methods make small

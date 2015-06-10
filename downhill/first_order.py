@@ -12,7 +12,10 @@ __all__ = ['SGD', 'NAG']
 
 
 class SGD(Optimizer):
-    r'''Optimize using stochastic gradient descent with momentum.
+    r'''Basic optimization using stochastic gradient descent.
+
+    Notes
+    -----
 
     A stochastic gradient trainer with momentum :math:`\mu` and learning rate
     :math:`\alpha` updates parameter :math:`\theta` at step :math:`t` by
@@ -48,7 +51,15 @@ class SGD(Optimizer):
 
 
 class NAG(SGD):
-    r'''Optimize using Nesterov's Accelerated Gradient (NAG).
+    r'''Stochastic gradient optimization with Nesterov momentum.
+
+    This class name is an abbreviation for "Nesterov's Accelerated Gradient."
+    Note that the ``momentum`` parameter must be given during optimization for
+    Nesterov momentum to be employed; by default ``momentum`` is 0 and so no
+    momentum is used.
+
+    Notes
+    -----
 
     The basic difference between NAG and "classical" momentum in SGD
     optimization approaches is that NAG computes the gradients at the position
