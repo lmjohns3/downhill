@@ -51,17 +51,17 @@ for the loss, you can optimize it with a single call to ``downhill.minimize``::
   u = theano.shared(np.random.randn(A, K).astype('f'), name='u')
   v = theano.shared(np.random.randn(K, B).astype('f'), name='v')
   x = TT.matrix('x')
-  err = TT.sqr(x - TT.dot(u, v))
+  e = TT.sqr(x - TT.dot(u, v))
 
   # Minimize the regularized loss with respect to a data matrix.
   y = np.arange(A * B).reshape((A, B)).astype('f')
 
   downhill.minimize(
-      loss=err.mean() + abs(u).mean() + (v * v).mean(),
+      loss=e.mean() + abs(u).mean() + (v * v).mean(),
       train=[y],
-      batch_size=A,  # Process y as a single batch.
-      max_gradient_norm=1,  # Prevent gradient explosion!
-      monitors=(('err', err),  # Monitor during optimization.
+      batch_size=A,          # Process y as a single batch.
+      max_gradient_norm=1,   # Prevent gradient explosion!
+      monitors=(('err', e),  # Monitor during optimization.
                 ('|u|<0.1', (abs(u) < 0.1).mean()),
                 ('|v|<0.1', (abs(v) < 0.1).mean())),
       monitor_gradients=True)
