@@ -1,10 +1,10 @@
-============
-``DOWNHILL``
-============
-
 .. image:: https://travis-ci.org/lmjohns3/downhill.svg
 .. image:: https://coveralls.io/repos/lmjohns3/downhill/badge.svg
    :target: https://coveralls.io/r/lmjohns3/downhill
+
+============
+``DOWNHILL``
+============
 
 The ``downhill`` package provides algorithms for minimizing scalar loss
 functions that are defined using Theano_.
