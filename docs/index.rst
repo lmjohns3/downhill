@@ -46,7 +46,7 @@ from growing too large.
 
 This is pretty straightforward to model using Theano. Once you set up the
 appropriate variables and an expression for the loss, you can optimize the loss
-with respect to the variables using ``downhill``::
+with respect to the variables using a single call to :func:`downhill.minimize`::
 
   import climate
   import downhill
@@ -58,27 +58,28 @@ with respect to the variables using ``downhill``::
 
   A, B, K = 100, 1000, 10
 
-  x = TT.matrix('x')
-
-  y = np.arange(A * B).reshape((A, B)).astype('f')
+  # Set up a matrix factorization problem to optimize.
   u = theano.shared(np.random.randn(A, K).astype('f'), name='u')
   v = theano.shared(np.random.randn(K, B).astype('f'), name='v')
-
+  x = TT.matrix('x')
   err = TT.sqr(x - TT.dot(u, v))
+
+  # Minimize the regularized loss with respect to a data matrix.
+  y = np.arange(A * B).reshape((A, B)).astype('f')
 
   downhill.minimize(
       loss=err.mean() + abs(u).mean() + (v * v).mean(),
-      params=[u, v],
-      inputs=[x],
       train=[y],
-      batch_size=A,
-      monitors=(
-          ('u<0.1', 100 * (abs(u) < 0.1).mean()),
-          ('v<0.1', 100 * (abs(v) < 0.1).mean()),
-      ))
+      batch_size=A,  # Process y as a single batch.
+      max_gradient_norm=1,  # Prevent gradient explosion!
+      monitors=(('err', err),  # Monitor during optimization.
+                ('|u|<0.1', (abs(u) < 0.1).mean()),
+                ('|v|<0.1', (abs(v) < 0.1).mean())),
+      monitor_gradients=True)
 
-After optimization, you can get the :math:`u` and :math:`v` matrix values out of
-the shared variables using ``u.get_value()`` and ``v.get_value()``.
+  # Print out the optimized coefficients u and basis v.
+  print('u =', u.get_value())
+  print('v =', v.get_value())
 
 Documentation
 =============
