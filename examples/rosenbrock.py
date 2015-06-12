@@ -5,6 +5,8 @@ import downhill
 import numpy as np
 import theano
 
+from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+
 climate.enable_default_logging()
 
 COLORS = ('#d62728 #1f77b4 #2ca02c #9467bd #ff7f0e '
@@ -19,13 +21,14 @@ def build(algo, init):
     being optimized and the parameters to update during optimization.
     '''
     x = theano.shared(np.array(init, 'f'), name='x')
+    n = 0.1 * RandomStreams().normal((len(init) - 1, ))
     monitors = []
     if len(init) == 2:
         # this gives us access to the x and y locations during optimization.
         monitors.extend([('x', x[:-1].sum()), ('y', x[1:].sum())])
     return downhill.build(
         algo,
-        loss=(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2).sum(),
+        loss=(n + 100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2).sum(),
         params=[x],
         inputs=[],
         monitors=monitors,
