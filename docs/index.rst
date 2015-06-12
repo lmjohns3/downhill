@@ -26,8 +26,8 @@ and discussion happen on the `mailing list`_.
 .. _Theano: http://deeplearning.net/software/theano/
 .. _mailing list: https://groups.google.com/forum/#!forum/downhill-users
 
-Example Code
-============
+Quick Start: Matrix Factorization
+=================================
 
 Let's say you want to compute a sparse, low-rank approximation for some
 1000-dimensional data that you have lying around. You can represent a batch of
@@ -56,23 +56,25 @@ with respect to the variables using a single call to :func:`downhill.minimize`::
 
   climate.enable_default_logging()
 
-  A, B, K = 100, 1000, 10
+  def rand(a, b): return np.random.randn(a, b).astype('f')
+
+  A, B, K = 20, 5, 3
 
   # Set up a matrix factorization problem to optimize.
-  u = theano.shared(np.random.randn(A, K).astype('f'), name='u')
-  v = theano.shared(np.random.randn(K, B).astype('f'), name='v')
-  x = TT.matrix('x')
-  e = TT.sqr(x - TT.dot(u, v))
+  u = theano.shared(rand(A, K), name='u')
+  v = theano.shared(rand(K, B), name='v')
+  e = TT.sqr(TT.matrix() - TT.dot(u, v))
 
   # Minimize the regularized loss with respect to a data matrix.
-  y = np.arange(A * B).reshape((A, B)).astype('f')
+  y = np.dot(rand(A, K), rand(K, B)) + rand(A, B)
 
   downhill.minimize(
       loss=e.mean() + abs(u).mean() + (v * v).mean(),
       train=[y],
-      batch_size=A,          # Process y as a single batch.
-      max_gradient_norm=1,   # Prevent gradient explosion!
-      monitors=(('err', e),  # Monitor during optimization.
+      batch_size=A,                 # Process y as a single batch.
+      max_gradient_norm=1,          # Prevent gradient explosion!
+      learning_rate=0.1,
+      monitors=(('err', e.mean()),  # Monitor during optimization.
                 ('|u|<0.1', (abs(u) < 0.1).mean()),
                 ('|v|<0.1', (abs(v) < 0.1).mean())),
       monitor_gradients=True)
