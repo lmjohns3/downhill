@@ -1,10 +1,10 @@
-============
-``DOWNHILL``
-============
-
 .. image:: https://travis-ci.org/lmjohns3/downhill.svg
 .. image:: https://coveralls.io/repos/lmjohns3/downhill/badge.svg
    :target: https://coveralls.io/r/lmjohns3/downhill
+
+============
+``DOWNHILL``
+============
 
 The ``downhill`` package provides algorithms for minimizing scalar loss
 functions that are defined using Theano_.
@@ -27,15 +27,17 @@ All algorithms permit the use of regular or Nesterov-style momentum as well.
 .. _Adam: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.Adam.html
 .. _Equilibrated SGD: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ESGD.html
 
-Example Code
-============
+Quick Start: Matrix Factorization
+=================================
 
 Let's say you have 100 samples of 1000-dimensional data, and you want to
 represent your data as 100 coefficients in a 10-dimensional basis. This is
-pretty straightforward to model using Theano, using a matrix multiplication as
-the data model, a squared-error term for optimization, and a sparse regularizer
-to encourage small coefficient values. Once you have constructed an expression
-for the loss, you can optimize it with a single call to ``downhill.minimize``::
+pretty straightforward to model using Theano: you can use a matrix
+multiplication as the data model, a squared-error term for optimization, and a
+sparse regularizer to encourage small coefficient values.
+
+Once you have constructed an expression for the loss, you can optimize it with a
+single call to ``downhill.minimize``::
 
   import climate
   import downhill
@@ -45,23 +47,25 @@ for the loss, you can optimize it with a single call to ``downhill.minimize``::
 
   climate.enable_default_logging()
 
-  A, B, K = 100, 1000, 10
+  def rand(a, b): return np.random.randn(a, b).astype('f')
+
+  A, B, K = 20, 5, 3
 
   # Set up a matrix factorization problem to optimize.
-  u = theano.shared(np.random.randn(A, K).astype('f'), name='u')
-  v = theano.shared(np.random.randn(K, B).astype('f'), name='v')
-  x = TT.matrix('x')
-  err = TT.sqr(x - TT.dot(u, v))
+  u = theano.shared(rand(A, K), name='u')
+  v = theano.shared(rand(K, B), name='v')
+  e = TT.sqr(TT.matrix() - TT.dot(u, v))
 
   # Minimize the regularized loss with respect to a data matrix.
-  y = np.arange(A * B).reshape((A, B)).astype('f')
+  y = np.dot(rand(A, K), rand(K, B)) + rand(A, B)
 
   downhill.minimize(
-      loss=err.mean() + abs(u).mean() + (v * v).mean(),
+      loss=e.mean() + abs(u).mean() + (v * v).mean(),
       train=[y],
-      batch_size=A,  # Process y as a single batch.
-      max_gradient_norm=1,  # Prevent gradient explosion!
-      monitors=(('err', err),  # Monitor during optimization.
+      batch_size=A,                 # Process y as a single batch.
+      max_gradient_norm=1,          # Prevent gradient explosion!
+      learning_rate=0.1,
+      monitors=(('err', e.mean()),  # Monitor during optimization.
                 ('|u|<0.1', (abs(u) < 0.1).mean()),
                 ('|v|<0.1', (abs(v) < 0.1).mean())),
       monitor_gradients=True)
