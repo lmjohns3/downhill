@@ -91,3 +91,9 @@ Documentation
 
    guide
    reference
+
+Indices and tables
+==================
+
+- :ref:`genindex`
+- :ref:`modindex`
