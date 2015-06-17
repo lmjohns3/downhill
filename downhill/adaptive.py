@@ -15,7 +15,7 @@ from .util import as_float, shared_like
 
 logging = climate.get_logger(__name__)
 
-__all__ = ['RProp', 'RMSProp', 'ADADELTA', 'ESGD', 'Adam']
+__all__ = ['RProp', 'RMSProp', 'ADAGRAD', 'ADADELTA', 'ESGD', 'Adam']
 
 
 class RProp(Optimizer):
@@ -105,6 +105,59 @@ class RProp(Optimizer):
         yield param, param - TT.sgn(grad) * step
         yield grad_tm1, grad
         yield step_tm1, step
+
+
+class ADAGRAD(Optimizer):
+    r'''ADAGRAD optimizer.
+
+    Notes
+    -----
+
+    The ADAGRAD method uses the same general strategy as all first-order
+    stochastic gradient methods, in the sense that these methods make small
+    parameter adjustments iteratively using local derivative information.
+
+    The difference with ADAGRAD is that as gradients are computed during each
+    parameter update, their squares are accumulated, and this accumulated value
+    is used to rescale the global learning rate :math:`\alpha` separately for
+    each parameter.
+
+    .. math::
+        \begin{eqnarray*}
+        g_{t+1} &=& g_t + \left(\frac{\partial\mathcal{L}}{\partial p}\right)^2 \\
+        p_{t+1} &=& p_t - \frac{\alpha}{\sqrt{g_{t+1}} + \epsilon}
+           \frac{\partial\mathcal{L}}{\partial p}
+        \end{eqnarray*}
+
+    Like the other adaptive learning methods, learning method effectively
+    maintains a sort of parameter-specific learning rate. Unlike
+    :class:`RMSProp` and :class:`ADADELTA`, however, in ADAGRAD, the gradient
+    magnitudes accumulate throughout training, which has the effect of scaling
+    the learning rate for each parameter, but also effectively anneals the
+    learning rate overall as training progresses.
+
+    In this implementation, the scale values are regularized (made less extreme)
+    by :math:`\epsilon`, which is specified using the ``regularizer`` parameter.
+
+    References
+    ----------
+
+    .. [Duch10] J. Duchi, E. Hazan, & Y. Singer (2010) “Adaptive subgradient
+       methods for online leaning and stochastic optimization.” Proc. Conference
+       on Learning Theory (COLT).
+    '''
+
+    def _prepare(self, regularizer=1e-8, **kwargs):
+        self.epsilon = as_float(regularizer)
+        logging.info('-- regularizer = %s', regularizer)
+        super(ADAGRAD, self)._prepare(**kwargs)
+
+    def _get_updates_for(self, param, grad):
+        g2_tm1 = shared_like(param, 'g2_ewma')
+        g2_t = g2_tm1 + grad * grad
+        delta = grad * self.learning_rate / TT.sqrt(g2_t + self.epsilon)
+        yield g2_tm1, g2_t
+        yield param, param - delta
 
 
 class RMSProp(Optimizer):

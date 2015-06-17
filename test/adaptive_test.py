@@ -63,6 +63,28 @@ class TestRProp:
             break
 
 
+class TestADAGRAD:
+    def test_rosen(self):
+        util.assert_progress(*util.build_rosen('adagrad'))
+
+    def test_factor(self):
+        util.assert_progress(*util.build_factor('adagrad'))
+
+    def test_default_params(self):
+        opt, data = util.build_rosen('adagrad')
+        for _ in opt.iteropt(data):
+            assert np.allclose(opt.learning_rate.eval(), 1e-4)
+            assert np.allclose(opt.epsilon.eval(), 1e-8)
+            break
+
+    def test_params(self):
+        opt, data = util.build_rosen('adagrad')
+        for _ in opt.iteropt(data, regularizer=0.1):
+            assert np.allclose(opt.learning_rate.eval(), 1e-4)
+            assert np.allclose(opt.epsilon.eval(), 0.1)
+            break
+
+
 class TestRMSProp:
     def test_rosen(self):
         util.assert_progress(*util.build_rosen('rmsprop'))

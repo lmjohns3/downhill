@@ -13,11 +13,12 @@ Several optimization algorithms are included:
 - First-order stochastic gradient descent: :class:`SGD
   <downhill.first_order.SGD>` and :class:`NAG <downhill.first_order.NAG>`.
 - First-order stochastic techniques with adaptive learning rates: :class:`RProp
-  <downhill.adaptive.RProp>`, :class:`RMSProp <downhill.adaptive.RMSProp>`,
-  :class:`Equilibrated SGD <downhill.adaptive.ESGD>`, :class:`Adam
-  <downhill.adaptive.Adam>`, and :class:`ADADELTA <downhill.adaptive.ADADELTA>`.
+  <downhill.adaptive.RProp>`, :class:`ADAGRAD <downhill.adaptive.ADAGRAD>`,
+  :class:`RMSProp <downhill.adaptive.RMSProp>`, :class:`Equilibrated SGD
+  <downhill.adaptive.ESGD>`, :class:`Adam <downhill.adaptive.Adam>`, and
+  :class:`ADADELTA <downhill.adaptive.ADADELTA>`.
 
-Most algorithms permit the use of regular or Nesterov-style momentum as well.
+All algorithms permit the use of regular or Nesterov-style momentum as well.
 
 The source code for ``downhill`` lives at http://github.com/lmjohns3/downhill,
 the documentation lives at http://downhill.readthedocs.org, and announcements

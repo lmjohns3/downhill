@@ -13,7 +13,7 @@ Several optimization algorithms are included:
 
 - First-order stochastic gradient descent: SGD_ and NAG_.
 - First-order stochastic techniques with adaptive learning rates: RProp_,
-  RMSProp_, `Equilibrated SGD`_, Adam_, and ADADELTA_.
+  ADAGRAD_, RMSProp_, `Equilibrated SGD`_, Adam_, and ADADELTA_.
 
 All algorithms permit the use of regular or Nesterov-style momentum as well.
 
@@ -22,6 +22,7 @@ All algorithms permit the use of regular or Nesterov-style momentum as well.
 .. _SGD: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.SGD.html
 .. _NAG: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.NAG.html
 .. _RProp: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RProp.html
+.. _ADAGRAD: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ADAGRAD.html
 .. _RMSProp: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RMSProp.html
 .. _ADADELTA: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ADADELTA.html
 .. _Adam: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.Adam.html

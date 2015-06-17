@@ -39,6 +39,7 @@ Adaptive Optimizers
    :toctree: generated/
 
    ADADELTA
+   ADAGRAD
    Adam
    ESGD
    RMSProp
