@@ -45,9 +45,9 @@ the measurements you've made.
 
 So you need to take the data points that you collected and somehow use them to
 compute a slope :math:`m` and an intercept :math:`b` such that the resulting
-line :math:`y_i = m x_i + b` passes as closely as possible to your data points.
-In this example, the loss :math:`\mathcal{L}` might be expressed as the sum of
-the differences between the values on the line and the observed data:
+line :math:`y = m x + b` passes as closely as possible to your data points. In
+this example, the loss :math:`\mathcal{L}` might be expressed as the sum of the
+differences between the values on the line and the observed data:
 
 .. math::
    \mathcal{L}(m,b) = \sum_{i=1}^N \| m x_i + b - y_i \|_2^2
