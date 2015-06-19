@@ -2,6 +2,15 @@
 Reference
 =========
 
+.. automodule:: downhill
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary::
+   :toctree: generated/
+
+   minimize
+
 Base
 ====
 
