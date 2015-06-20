@@ -109,13 +109,20 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
     def _compile(self):
         '''Compile the Theano functions for evaluating and updating our model.
         '''
-        logging.info('compiling evaluation function')
-        self.f_eval = theano.function(
-            self._inputs, self._monitor_exprs, updates=self._updates)
-        logging.info('compiling %s step function', self.__class__.__name__)
+        label = self.__class__.__name__.lower()
+        name = label + '-eval'
+        logging.info('compiling %s function', name)
+        self.f_eval = theano.function(self._inputs,
+                                      self._monitor_exprs,
+                                      updates=self._updates,
+                                      name=name)
+        name = label + '-step'
+        logging.info('compiling %s function', name)
         updates = list(self._updates) + list(self._get_updates())
-        self.f_step = theano.function(
-            self._inputs, self._monitor_exprs, updates=updates)
+        self.f_step = theano.function(self._inputs,
+                                      self._monitor_exprs,
+                                      updates=updates,
+                                      name=name)
 
     def _get_updates(self):
         '''Get parameter update expressions for performing optimization.
