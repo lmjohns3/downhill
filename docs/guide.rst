@@ -69,6 +69,7 @@ In Theano, you need to define `shared variables`_ for each of the parameters in
 your model, and `symbolic inputs`_ for the data that you'll use to evaluate your
 loss. We'll start with the shared variables::
 
+  import downhill
   import numpy as np
   import theano
   import theano.tensor as TT
@@ -115,7 +116,37 @@ Minimizing a Loss
 The ``downhill`` package provides a single high-level function,
 :func:`downhill.minimize`, that can be used as a black-box optimizer for losses.
 In addition, there are lower-level calls that provide more control over the
-interaction between your code and ``downhill``.
+interaction between your code and ``downhill``. First, we'll look at the
+high-level minimize function.
+
+Once you've defined your loss using Theano, you can minimize it with a single
+function call. Here, we'll minimize the loss defined above::
+
+  downhill.minimize(loss=loss, inputs=[x, y], train=[sizes, prices])
+
+Here you specify the loss to minimize, the inputs that the loss requires, and a
+set of "training" data to use for computing the loss.
+
+The training data is typically a list of ``numpy`` arrays of the measurements
+you've made for your problem; here, the arrays for house size and house price
+might be set up like this::
+
+  sizes = np.array([1200, 2013, 8129, 2431, 2211])
+  prices = np.array([103020, 203310, 3922013, 224321, 449020])
+
+For many losses in machine learning, the datasets are often much larger, but the
+idea remains the same: to compute the loss for a model, you usually need to
+provide some input data. The parameters (shared variables) in the loss will be
+optimized so that the loss is as small as possible, given the training data you
+provide.
+
+.. _training-validation:
+
+Training and Validation
+-----------------------
+
+Given that you normally can't gather *all* of the data that might be possible
+for a given problem, 
 
 .. _creating-optimizer:
 
@@ -140,11 +171,6 @@ future.
 Either way, you'll often need to provide data to ``downhill`` so that you can
 compute the loss and optimize the parameters. There are two ways of passing data
 to ``downhill``: using arrays and using callables.
-
-.. _data-training-validation:
-
-Training and Validation
------------------------
 
 .. _data-using-arrays:
 
