@@ -11,17 +11,22 @@ functions that are defined using Theano_.
 
 Several optimization algorithms are included:
 
-- First-order stochastic gradient descent: SGD_ and NAG_.
-- First-order stochastic techniques with adaptive learning rates: RProp_,
-  ADAGRAD_, RMSProp_, `Equilibrated SGD`_, Adam_, and ADADELTA_.
+- `Stochastic Gradient Descent`_
+- `Nesterov's Accelerated Gradient`_
+- ADADELTA_
+- ADAGRAD_
+- Adam_
+- `Equilibrated SGD`_
+- RMSProp_
+- `Resilient Backpropagation`_
 
 All algorithms permit the use of regular or Nesterov-style momentum as well.
 
 .. _Theano: http://deeplearning.net/software/theano/
 
-.. _SGD: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.SGD.html
-.. _NAG: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.NAG.html
-.. _RProp: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RProp.html
+.. _Stochastic Gradient Descent: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.SGD.html
+.. _Nesterov's Accelerated Gradient: http://downhill.readthedocs.org/en/stable/generated/downhill.first_order.NAG.html
+.. _Resilient Backpropagation: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RProp.html
 .. _ADAGRAD: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ADAGRAD.html
 .. _RMSProp: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.RMSProp.html
 .. _ADADELTA: http://downhill.readthedocs.org/en/stable/generated/downhill.adaptive.ADADELTA.html

@@ -1,7 +1,3 @@
-============
-``DOWNHILL``
-============
-
 .. figure:: _static/rosenbrock-nag.png
    :figclass: banana
 
@@ -10,13 +6,14 @@ functions that are defined using Theano_.
 
 Several optimization algorithms are included:
 
-- First-order stochastic gradient descent: :class:`SGD
-  <downhill.first_order.SGD>` and :class:`NAG <downhill.first_order.NAG>`.
-- First-order stochastic techniques with adaptive learning rates: :class:`RProp
-  <downhill.adaptive.RProp>`, :class:`ADAGRAD <downhill.adaptive.ADAGRAD>`,
-  :class:`RMSProp <downhill.adaptive.RMSProp>`, :class:`Equilibrated SGD
-  <downhill.adaptive.ESGD>`, :class:`Adam <downhill.adaptive.Adam>`, and
-  :class:`ADADELTA <downhill.adaptive.ADADELTA>`.
+- :class:`Stochastic Gradient Descent <downhill.first_order.SGD>`
+- :class:`Nesterov's Accelerated Gradient <downhill.first_order.NAG>`
+- :class:`Resilient Backpropagation <downhill.adaptive.RProp>`
+- :class:`ADAGRAD <downhill.adaptive.ADAGRAD>`
+- :class:`RMSProp <downhill.adaptive.RMSProp>`
+- :class:`Equilibrated SGD <downhill.adaptive.ESGD>`
+- :class:`Adam <downhill.adaptive.Adam>`
+- :class:`ADADELTA <downhill.adaptive.ADADELTA>`
 
 All algorithms permit the use of regular or Nesterov-style momentum as well.
 
