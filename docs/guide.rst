@@ -117,48 +117,175 @@ The ``downhill`` package provides a single high-level function,
 :func:`downhill.minimize`, that can be used as a black-box optimizer for losses.
 In addition, there are lower-level calls that provide more control over the
 interaction between your code and ``downhill``. First, we'll look at the
-high-level minimize function.
+high-level minimize function and then discuss some common optimization
+hyperparameters.
 
 Once you've defined your loss using Theano, you can minimize it with a single
 function call. Here, we'll minimize the loss defined above::
 
   downhill.minimize(loss=loss, inputs=[x, y], train=[sizes, prices])
 
-Here you specify the loss to minimize, the inputs that the loss requires, and a
-set of "training" data to use for computing the loss.
+You just specify the loss to minimize, the inputs that the loss requires, and a
+set of :ref:`"training" data <data>` to use for computing the loss. The
+``downhill`` code will select an optimization algorithm, identify shared
+variables in the loss that need optimization, and run the optimization process
+to completion. After the minimization has finished, the shared variables in your
+loss will be updated to their optimal values.
 
-The training data is typically a list of ``numpy`` arrays of the measurements
-you've made for your problem; here, the arrays for house size and house price
-might be set up like this::
+There is much to say about data, but briefly, the training data is typically a
+list of ``numpy`` arrays of the measurements you've made for your problem; for
+the house price regression, the arrays for house size and house price might be
+set up like this::
 
   sizes = np.array([1200, 2013, 8129, 2431, 2211])
   prices = np.array([103020, 203310, 3922013, 224321, 449020])
 
-For many losses in machine learning, the datasets are often much larger, but the
-idea remains the same: to compute the loss for a model, you usually need to
-provide some input data. The parameters (shared variables) in the loss will be
-optimized so that the loss is as small as possible, given the training data you
-provide.
+If you want a little more control over the minimization process, you can also
+create an :class:`Optimizer` class directly::
 
-.. _training-validation:
+  opt = downhill.build('rmsprop', loss=loss, inputs=[x, y])
 
-Training and Validation
------------------------
+Then you can either iteratively or completely optimize the loss with respect to
+a given dataset::
 
-Given that you normally can't gather *all* of the data that might be possible
-for a given problem, you're running a risk in using a stochastic optimizer to
-solve your problem. The risk is that if the data you have collected aren't
-representative of the data that you might encounter in the future, then your
-estimates of the loss might be skewed, and the "optimal" model you find might
-not actually work well on that hypothetically different future data.
+  opt.minimize(train=downhill.Dataset([sizes, prices]))
 
-This problem is generally referred to as *overfitting* because you might even be
-able to get perfect performance on the data you've collected.
+While running these optimization algorithms, there are several common
+hyperparameters that might be important to tune properly to get the best
+performance.
 
-.. _creating-optimizer:
+.. _learning-rate:
 
-Creating an Optimizer
-=====================
+Learning Rate
+-------------
+
+Most stochastic gradient optimization methods make small parameter updates based
+on the local gradient of the loss at each step in the optimization procedure.
+Intuitively, parameters in a model are updated by subtracting a small portion of
+the local derivative from the current parameter value. Mathematically, this is
+written as:
+
+.. math::
+
+   \theta_{t+1} = \theta_t - \alpha \left. \frac{\partial\mathcal{L}}{\partial\theta} \right|_{\theta_t}
+
+where :math:`\mathcal{L}` is the loss function being optimized, :math:`\theta`
+is the value of a parameter in the model (e.g., :math:`m` or :math:`b` for the
+regression problem) at optimization step :math:`t`, :math:`\alpha` is the
+learning rate, and :math:`\frac{\partial\mathcal{L}}{\partial\theta}` (also
+often written :math:`\nabla_{\theta_t}\mathcal{L}`) is the partial derivative of
+the loss with respect to the parameters, evaluated at the current value of those
+parameters.
+
+The learning rate :math:`\alpha` specifies the scale of these parameter updates
+with respect to the magnitude of the gradient. Almost all stochastic optimizers
+use a fixed learning rate parameter.
+
+In ``downhill``, the learning rate is passed as a keyword argument to
+``minimize()``::
+
+  downhill.minimize(
+      loss,
+      inputs=[x, y],
+      train=[sizes, prices],
+      learning_rate=0.1)
+
+Often the learning rate is set to a very small value---many approaches seem to
+start with values around 1e-4. If the learning rate is too large, the
+optimization procedure might "bounce around" in the loss landscape because the
+parameter steps are too large. If the learning rate is too small, the
+optimization procedure might not make progress quickly enough to make training
+practical.
+
+.. _momentum:
+
+Momentum
+--------
+
+Momentum is a common technique in stochastic gradient optimization algorithms
+that seems to accelerate the optimization process in most cases. Intuitively,
+momentum avoids "jitter" in the parameters during optimization by smoothing the
+estimates of the local gradient information over time. In practice a momentum
+method maintains a "velocity" of the most recent parameter steps and combines
+these recent individual steps together when making a parameter update.
+Mathematically, this is written:
+
+.. math::
+
+   \begin{eqnarray*}
+   \nu_{t+1} &=& \mu \nu_t - \alpha \left. \frac{\partial\mathcal{L}}{\partial\theta} \right|_{\theta_t} \\
+   \theta_{t+1} &=& \theta_t + \nu_{t+1}
+   \end{eqnarray*}
+
+where the symbols are the same as above, and additionally :math:`\nu` describes
+the "velocity" of parameter :math:`\theta`, and :math:`\mu` is the momentum
+hyperparameter. The gradient computations using momentum are exactly the same as
+when not using momentum; the only difference is the accumulation of recent
+updates in the "velocity."
+
+In ``downhill``, the momentum value is passed as a keyword argument to
+``minimize()``::
+
+  downhill.minimize(
+      loss,
+      inputs=[x, y],
+      train=[sizes, prices],
+      momentum=0.9)
+
+Typically momentum is set to a value in :math:`[0, 1)`---when set to 0, momentum
+is disabled, and when set to values near 1, the momentum is very high, requiring
+several consecutive parameter updates in the same direction to change the
+parameter velocity.
+
+In many problems it is useful to set the momentum to a surprisingly large value,
+sometimes even to values greater than 0.9. Such values can be especially
+effective with a relatively small learning rate.
+
+If the momentum is set too low, then parameter updates will be more noisy and
+optimization might take longer to converge, but if the momentum is set too high,
+the optimization process might diverge entirely.
+
+.. _gradient-clipping:
+
+Gradient Clipping
+-----------------
+
+Sometimes during the execution of a stochastic optimization routine---and
+particularly at the start of optimization, when the problem parameters are far
+from their optimal values---the gradient of the loss with respect to the
+parameters can be extremely large. In these cases, taking a step that is
+proportional to the gradient can actually be harmful, resulting in an
+unpredictable parameter change.
+
+To prevent this from happening, but still preserve the iterative loss
+improvements when parameters are in a region with "more reasonable" gradient
+magnitudes, ``downhill`` implements two forms of "clipping" the gradient.
+
+The first gradient truncation method rescales the entire gradient vector if its
+norm exceeds some threshold. This is accomplished using the
+``max_gradient_norm`` hyperparameter::
+
+  downhill.minimize(
+      loss,
+      inputs=[x, y],
+      train=[sizes, prices],
+      max_gradient_norm=1)
+
+The second gradient truncation method clips each element of the gradient vector
+individually. This is accomplished using the ``max_gradient_elem``
+hyperparameter::
+
+  downhill.minimize(
+      loss,
+      inputs=[x, y],
+      train=[sizes, prices],
+      max_gradient_elem=1)
+
+In both cases, gradients that are extremely large will still point in the
+correct direction, but their magnitudes will be rescaled to avoid steps that are
+too large. Gradients with values smaller than the thresholds (presumably,
+gradients near an optimum will be small) will not be affected. In both cases,
+the strategy of taking small steps proportional to the gradient seems to work.
 
 .. _providing-data:
 
@@ -237,9 +364,7 @@ offset for each batch::
       i = np.random.randint(len(X))
       return X[i:i+BATCH_SIZE]
 
-  # ...
-
-  exp.train(batch)
+  downhill.minimize(..., train=batch)
 
 If you need to maintain more state than is reasonable from a single closure, you
 can also encapsulate the callable inside a class. Just make sure instances of
@@ -265,9 +390,125 @@ of the on-disk arrays into memory at a given time::
           finally:
               self.idx += self.batch_size
 
-  # ...
-
-  exp.train(Loader())
+  downhill.minimize(..., train=Loader())
 
 There are almost limitless possibilities for using callables to interface with
 the optimization process.
+
+.. _training-validation:
+
+Training and Validation Data
+----------------------------
+
+Let's talk for a minute about data. For your typical regression problem, it's
+not feasible or even possible to gather *all* of the relevant data---either it's
+too expensive to do that, or there might be new data created in the future that
+you just don't have any way of predicting.
+
+Given this paucity of data, you're running a risk in using a stochastic
+optimizer to solve your problem: the data you have collected might not be
+representative of the data that you haven't collected. If this is true, then
+your estimates of the loss might be skewed, because these loss estimates are
+computed using the "training" data you provide to the optimization algorithm. As
+a result, the "optimal" model you find might actually only be optimal with
+respect to the data you collected. It might not work well on future data, for
+example.
+
+This problem is generally referred to as overfitting_. An optimization algorithm
+is designed to minimize the loss on your problem; in some cases you might even
+be able to get perfect performance on the data you've collected. But in many
+situations, getting perfect performance on your training data is nearly
+synonymous with poor performance on future or unseen data!
+
+.. _overfitting: https://en.wikipedia.org/wiki/Overfitting
+
+There are many ways to combat overfitting. One is to tighten your belt and just
+gather more data---having more data is a way of ensuring that the data you do
+have will be representative of data you will see in the future. Another is to
+regularize_ your loss function; this tends to encourage some solutions to your
+problem (e.g., solutions with small parameter values) and discourage others
+(e.g., solutions that "memorize" outliers). A third way of combatting
+overfitting is by gathering a set of "validation" data and :ref:`stopping the
+training process <early-stopping>` when the performance of your model on the
+validation set stops improving. The algorithms in ``downhill`` implement this
+"early stopping" method; to take advantage of it, just provide a second set of
+data when minimizing your loss::
+
+  downhill.minimize(loss,
+                    inputs=[x, y],
+                    train=[train_sizes, train_prices],
+                    valid=[valid_sizes, valid_prices])
+
+.. _regularize: https://en.wikipedia.org/wiki/Regularization_(mathematics)
+
+It's important that the validation dataset not be used during optimization with
+early stopping; the idea is that you want to use a small part of the data you've
+gathered as a sort of canary_ to guess when the performance of your model will
+stop improving when you actually take it out into the world and use it.
+
+.. _canary: https://en.wikipedia.org/wiki/Animal_sentinel#Historical_examples
+
+If you do not specify a validation dataset, the training dataset will also be
+used for validation, which effectively disables early stopping.
+
+.. _early-stopping:
+
+Early Stopping
+--------------
+
+When you make a call to ``train()`` (or ``itertrain()``), ``theanets`` begins an
+optimization procedure.
+
+continue to iterate as long as the training procedure you're using doesn't run
+out of patience. So the 50 iterations you're seeing might vary depending on the
+model, your dataset, and your training algorithm & parameters. (E.g., the
+"sample" trainer only produces one result, because sampling from the training
+dataset just happens once, but the SGD-based trainers will run for multiple
+iterations.)
+
+For each iteration produced by itertrain using a SGD-based algorithm, the
+trainer applies "train_batches" gradient updates to the model. Each of these
+batches contains "batch_size" training examples and computes a single gradient
+update. After "train_batches" have been processed, the training dataset is
+shuffled, so that subsequent iterations might see the same set of batches, but
+not in the same order.
+
+The validation dataset is run through the model to test convergence every
+"validate_every" iterations. If there is no progress for "patience" of these
+validations, then the training algorithm halts and returns.
+
+In theanets, the patience is the number of failed validation attempts
+that we're willing to tolerate before seeing any progress. So theanets
+will make (patience * validate_every) training updates, checking
+(patience) times for improvement before deciding that training should
+halt.
+
+In some other tools, the patience is the number of training updates
+that we're willing to wait before seeing any progress; these tools
+will make (patience) training updates, checking (patience /
+validate_every) times for improvement before deciding that training
+should halt. With this definition, you do want to make sure the
+validation frequency is smaller than half the patience, to have a good
+chance of seeing progress before halting.
+
+.. _iteration:
+
+Training as Iteration
+=====================
+
+The :func:`downhill.minimize` function is actually just a thin wrapper over the
+underlying :func:`downhill.Optimizer.iteropt` method, which you can use directly
+if you want to do something special during training::
+
+  for tm, vm in opt.iteropt(train, valid, **kwargs):
+      print('training loss:', tm['loss'])
+      print('most recent validation loss:', vm['loss'])
+
+Optimizers yield a dictionary after each training iteration. The keys and values
+in each dictionary give the costs and monitors that are computed during
+training, which will vary depending on the model being trained. However, there
+will always be a ``'loss'`` key that gives the value of the loss function being
+optimized. Many types of models have an ``'err'`` key that gives the values of
+the unregularized error (e.g., the mean squared error for regressors). For
+classifier models, the dictionary will also have an ``'acc'`` key, which
+contains the percent accuracy of the classifier model.
