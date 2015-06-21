@@ -146,7 +146,14 @@ Training and Validation
 -----------------------
 
 Given that you normally can't gather *all* of the data that might be possible
-for a given problem, 
+for a given problem, you're running a risk in using a stochastic optimizer to
+solve your problem. The risk is that if the data you have collected aren't
+representative of the data that you might encounter in the future, then your
+estimates of the loss might be skewed, and the "optimal" model you find might
+not actually work well on that hypothetically different future data.
+
+This problem is generally referred to as *overfitting* because you might even be
+able to get perfect performance on the data you've collected.
 
 .. _creating-optimizer:
 
