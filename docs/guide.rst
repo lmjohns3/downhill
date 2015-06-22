@@ -126,38 +126,51 @@ function call. Here, we'll minimize the loss defined above::
   downhill.minimize(loss=loss, inputs=[x, y], train=[sizes, prices])
 
 You just specify the loss to minimize, the inputs that the loss requires, and a
-set of :ref:`"training" data <data>` to use for computing the loss. The
-``downhill`` code will select an optimization algorithm, identify shared
-variables in the loss that need optimization, and run the optimization process
-to completion. After the minimization has finished, the shared variables in your
-loss will be updated to their optimal values.
+set of "training" data to use for computing the loss. The ``downhill`` code will
+select an optimization algorithm, identify shared variables in the loss that
+need optimization, and run the optimization process to completion. After the
+minimization has finished, the shared variables in your loss will be updated to
+their optimal values.
 
-There is much to say about data, but briefly, the training data is typically a
-list of ``numpy`` arrays of the measurements you've made for your problem; for
-the house price regression, the arrays for house size and house price might be
-set up like this::
+There is much to say about data---see :ref:`providing-data` for more
+information---but briefly, the training data is typically a list of ``numpy``
+arrays of the measurements you've made for your problem; for the house price
+regression, the arrays for house size and house price might be set up like
+this::
 
   sizes = np.array([1200, 2013, 8129, 2431, 2211])
   prices = np.array([103020, 203310, 3922013, 224321, 449020])
 
-If you want a little more control over the minimization process, you can also
-create an :class:`Optimizer` class directly::
+While running the optimization procedure, there are several different algorithms
+to choose from, and there are also several common hyperparameters that might be
+important to tune properly to get the best performance.
 
-  opt = downhill.build('rmsprop', loss=loss, inputs=[x, y])
+.. _algorithm:
 
-Then you can either iteratively or completely optimize the loss with respect to
-a given dataset::
+Algorithms
+----------
 
-  for _ in opt.iterate(train=downhill.Dataset([sizes, prices])):
-      pass
+The following algorithms are currently available in ``downhill``:
 
-or::
+- ``'adadelta'`` --- :class:`ADADELTA <downhill.adaptive.ADADELTA>`
+- ``'adagrad'`` --- :class:`ADAGRAD <downhill.adaptive.ADAGRAD>`
+- ``'adam'`` --- :class:`Adam <downhill.adaptive.Adam>`
+- ``'esgd'`` --- :class:`Equilibrated SGD <downhill.adaptive.ESGD>`
+- ``'nag'`` --- :class:`Nesterov's Accelerated Gradient <downhill.first_order.NAG>`
+- ``'rmsprop'`` --- :class:`RMSProp <downhill.adaptive.RMSProp>`
+- ``'rprop'`` --- :class:`Resilient Backpropagation <downhill.adaptive.RProp>`
+- ``'sgd'`` --- :class:`Stochastic Gradient Descent <downhill.first_order.SGD>`
 
-  opt.minimize(train=downhill.Dataset([sizes, prices]))
+To select an algorithm, specify its name using the ``algo`` keyword argument::
 
-While running these optimization algorithms, there are several common
-hyperparameters that might be important to tune properly to get the best
-performance.
+  downhill.minimize(..., algo='adadelta')
+
+Different algorithms have different performance characteristics, different
+numbers of hyperparameters to tune, and might be better or worse for particular
+problems. In general, several of the the adaptive procedures seem to work well
+across different problems, particularly :class:`Adam <downhill.adaptive.Adam>`,
+:class:`ADADELTA <downhill.adaptive.ADADELTA>`, and :class:`RMSProp
+<downhill.adaptive.RMSProp>`.
 
 .. _learning-rate:
 
@@ -172,7 +185,8 @@ written as:
 
 .. math::
 
-   \theta_{t+1} = \theta_t - \alpha \left. \frac{\partial\mathcal{L}}{\partial\theta} \right|_{\theta_t}
+   \theta_{t+1} = \theta_t - \alpha \left.
+      \frac{\partial\mathcal{L}}{\partial\theta} \right|_{\theta_t}
 
 where :math:`\mathcal{L}` is the loss function being optimized, :math:`\theta`
 is the value of a parameter in the model (e.g., :math:`m` or :math:`b` for the
@@ -189,11 +203,7 @@ use a fixed learning rate parameter.
 In ``downhill``, the learning rate is passed as a keyword argument to
 ``minimize()``::
 
-  downhill.minimize(
-      loss,
-      inputs=[x, y],
-      train=[sizes, prices],
-      learning_rate=0.1)
+  downhill.minimize(..., learning_rate=0.1)
 
 Often the learning rate is set to a very small value---many approaches seem to
 start with values around 1e-4. If the learning rate is too large, the
@@ -231,11 +241,7 @@ updates in the "velocity."
 In ``downhill``, the momentum value is passed as a keyword argument to
 ``minimize()``::
 
-  downhill.minimize(
-      loss,
-      inputs=[x, y],
-      train=[sizes, prices],
-      momentum=0.9)
+  downhill.minimize(..., momentum=0.9)
 
 Typically momentum is set to a value in :math:`[0, 1)`---when set to 0, momentum
 is disabled, and when set to values near 1, the momentum is very high, requiring
@@ -250,6 +256,35 @@ If the momentum is set too low, then parameter updates will be more noisy and
 optimization might take longer to converge, but if the momentum is set too high,
 the optimization process might diverge entirely.
 
+Nesterov Momentum
+-----------------
+
+More recently, a newer momentum technique has been shown to be even more
+performant than "traditional" momentum. This technique was originally proposed
+by Y. Nesterov and effectively amounts to computing the momentum value at a
+different location in the parameter space, namely the location where the
+momentum value would have placed the parameter after the current update:
+
+.. math::
+   \begin{eqnarray*}
+   \nu_{t+1} &=& \mu \nu_t - \alpha \left.
+      \frac{\partial\mathcal{L}}{\partial\theta}\right|_{\theta_t + \mu\nu_t} \\
+   \theta_{t+1} &=& \theta_t + \nu_{t+1}
+   \end{eqnarray*}
+
+Note that the partial derivative is evaluated at :math:`\theta_t + \mu\nu_t`
+instead of at :math:`\theta_t`. The intuitive rationale for this change is that
+if the momentum would have produced an "overshoot," then the gradient at this
+overshot parameter value would point backwards, toward the previous parameter
+value, which would thus help correct oscillations during optimization.
+
+To use Nesterov-style momentum, use either the :class:`NAG
+<downhill.first_order.NAG>` optimizer (which uses plain stochastic gradient
+descent with Nesterov momentum), or specify ``nesterov=True`` in addition to
+providing a nonzero ``momentum`` value when minimizing your loss::
+
+  downhill.minimize(..., momentum=0.9, nesterov=True)
+
 .. _gradient-clipping:
 
 Gradient Clipping
@@ -259,38 +294,55 @@ Sometimes during the execution of a stochastic optimization routine---and
 particularly at the start of optimization, when the problem parameters are far
 from their optimal values---the gradient of the loss with respect to the
 parameters can be extremely large. In these cases, taking a step that is
-proportional to the gradient can actually be harmful, resulting in an
-unpredictable parameter change.
+proportional to the magnitude of the gradient can actually be harmful, resulting
+in an unpredictable parameter change.
 
 To prevent this from happening, but still preserve the iterative loss
 improvements when parameters are in a region with "more reasonable" gradient
-magnitudes, ``downhill`` implements two forms of "clipping" the gradient.
+magnitudes, ``downhill`` implements two forms of "gradient clipping."
 
 The first gradient truncation method rescales the entire gradient vector if its
-norm exceeds some threshold. This is accomplished using the
+L2 norm exceeds some threshold. This is accomplished using the
 ``max_gradient_norm`` hyperparameter::
 
-  downhill.minimize(
-      loss,
-      inputs=[x, y],
-      train=[sizes, prices],
-      max_gradient_norm=1)
+  downhill.minimize(..., max_gradient_norm=1)
 
 The second gradient truncation method clips each element of the gradient vector
 individually. This is accomplished using the ``max_gradient_elem``
 hyperparameter::
 
-  downhill.minimize(
-      loss,
-      inputs=[x, y],
-      train=[sizes, prices],
-      max_gradient_elem=1)
+  downhill.minimize(..., max_gradient_elem=1)
 
 In both cases, gradients that are extremely large will still point in the
 correct direction, but their magnitudes will be rescaled to avoid steps that are
 too large. Gradients with values smaller than the thresholds (presumably,
 gradients near an optimum will be small) will not be affected. In both cases,
 the strategy of taking small steps proportional to the gradient seems to work.
+
+.. _optimizing-iteratively:
+
+Optimizing Iteratively
+----------------------
+
+The :func:`downhill.minimize` function is actually just a thin wrapper over the
+underlying :func:`downhill.Optimizer.iterate` method, which you can use directly
+if you want to do something special during training::
+
+  opt = downhill.build('rmsprop', loss=loss, inputs=[x, y])
+  for tm, vm in opt.iterate(train=[sizes, prices], momentum=0.9):
+      print('training loss:', tm['loss'])
+      print('most recent validation loss:', vm['loss'])
+
+Here, we've constructed an :class:`Optimizer <downhill.base.Optimizer>` object,
+and we're using it to manually step through the optimization procedure.
+
+Optimizers yield a pair of dictionaries after each optimization epoch; these
+dictionaries provide information about the performance of the optimization
+procedure. The keys and values in each dictionary give the costs and monitors
+that are computed during optimization. There will always be a ``'loss'`` key
+that gives the value of the loss function being optimized. In addition, any
+monitors that were defined when creating the optimizer will also be provided in
+these dictionaries.
 
 .. _providing-data:
 
@@ -402,8 +454,8 @@ the optimization process.
 
 .. _training-validation:
 
-Training and Validation Data
-----------------------------
+Training and Validation
+-----------------------
 
 Let's talk for a minute about data. For your typical regression problem, it's
 not feasible or even possible to gather *all* of the relevant data---either it's
@@ -473,48 +525,26 @@ dataset just happens once, but the SGD-based trainers will run for multiple
 iterations.)
 
 For each iteration produced by itertrain using a SGD-based algorithm, the
-trainer applies "train_batches" gradient updates to the model. Each of these
-batches contains "batch_size" training examples and computes a single gradient
-update. After "train_batches" have been processed, the training dataset is
+trainer applies ``train_batches`` gradient updates to the model. Each of these
+batches contains ``batch_size`` training examples and computes a single gradient
+update. After ``train_batches`` have been processed, the training dataset is
 shuffled, so that subsequent iterations might see the same set of batches, but
 not in the same order.
 
 The validation dataset is run through the model to test convergence every
-"validate_every" iterations. If there is no progress for "patience" of these
+``validate_every`` iterations. If there is no progress for ``patience`` of these
 validations, then the training algorithm halts and returns.
 
 In theanets, the patience is the number of failed validation attempts
 that we're willing to tolerate before seeing any progress. So theanets
-will make (patience * validate_every) training updates, checking
+will make (``patience`` * ``validate_every``) training updates, checking
 (patience) times for improvement before deciding that training should
 halt.
 
 In some other tools, the patience is the number of training updates
 that we're willing to wait before seeing any progress; these tools
-will make (patience) training updates, checking (patience /
-validate_every) times for improvement before deciding that training
+will make (``patience``) training updates, checking (``patience`` /
+``validate_every``) times for improvement before deciding that training
 should halt. With this definition, you do want to make sure the
 validation frequency is smaller than half the patience, to have a good
 chance of seeing progress before halting.
-
-.. _iteration:
-
-Training as Iteration
-=====================
-
-The :func:`downhill.minimize` function is actually just a thin wrapper over the
-underlying :func:`downhill.Optimizer.iterate` method, which you can use directly
-if you want to do something special during training::
-
-  for tm, vm in opt.iterate(train, valid, **kwargs):
-      print('training loss:', tm['loss'])
-      print('most recent validation loss:', vm['loss'])
-
-Optimizers yield a dictionary after each training iteration. The keys and values
-in each dictionary give the costs and monitors that are computed during
-training, which will vary depending on the model being trained. However, there
-will always be a ``'loss'`` key that gives the value of the loss function being
-optimized. Many types of models have an ``'err'`` key that gives the values of
-the unregularized error (e.g., the mean squared error for regressors). For
-classifier models, the dictionary will also have an ``'acc'`` key, which
-contains the percent accuracy of the classifier model.
