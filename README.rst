@@ -11,14 +11,14 @@ functions that are defined using Theano_.
 
 Several optimization algorithms are included:
 
-- `Stochastic Gradient Descent`_
-- `Nesterov's Accelerated Gradient`_
 - ADADELTA_
 - ADAGRAD_
 - Adam_
 - `Equilibrated SGD`_
+- `Nesterov's Accelerated Gradient`_
 - RMSProp_
 - `Resilient Backpropagation`_
+- `Stochastic Gradient Descent`_
 
 All algorithms permit the use of regular or Nesterov-style momentum as well.
 

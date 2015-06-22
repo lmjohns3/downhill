@@ -6,14 +6,14 @@ functions that are defined using Theano_.
 
 Several optimization algorithms are included:
 
-- :class:`Stochastic Gradient Descent <downhill.first_order.SGD>`
-- :class:`Nesterov's Accelerated Gradient <downhill.first_order.NAG>`
-- :class:`Resilient Backpropagation <downhill.adaptive.RProp>`
-- :class:`ADAGRAD <downhill.adaptive.ADAGRAD>`
-- :class:`RMSProp <downhill.adaptive.RMSProp>`
-- :class:`Equilibrated SGD <downhill.adaptive.ESGD>`
-- :class:`Adam <downhill.adaptive.Adam>`
 - :class:`ADADELTA <downhill.adaptive.ADADELTA>`
+- :class:`ADAGRAD <downhill.adaptive.ADAGRAD>`
+- :class:`Adam <downhill.adaptive.Adam>`
+- :class:`Equilibrated SGD <downhill.adaptive.ESGD>`
+- :class:`Nesterov's Accelerated Gradient <downhill.first_order.NAG>`
+- :class:`RMSProp <downhill.adaptive.RMSProp>`
+- :class:`Resilient Backpropagation <downhill.adaptive.RProp>`
+- :class:`Stochastic Gradient Descent <downhill.first_order.SGD>`
 
 All algorithms permit the use of regular or Nesterov-style momentum as well.
 
