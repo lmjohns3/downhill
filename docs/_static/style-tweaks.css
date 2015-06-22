@@ -4,7 +4,8 @@ a tt, a:visited tt, a:active tt { color: #258; }
 .banana { float: right; max-width: 45%; }
 .banana img { width: 100%; }
 
-span.pre { background: #eee; font-size: 1.1em; padding: 0.1em 0.2em; }
+pre { font-size: 0.95rem; line-height: 1.25; }
+span.pre { background: #eee; font-size: 1rem; padding: 0.1rem 0.2rem; }
 
 li a.internal span.pre {
     background: inherit;
