@@ -18,7 +18,7 @@ opt = downhill.build(
     monitor_gradients=True)
 
 xs, ys, loss = [], [], []
-for tm, _ in opt.iteropt([[]],
+for tm, _ in opt.iterate([[]],
                          learning_rate=0.001,
                          momentum=0.95,
                          max_gradient_norm=100):

@@ -148,6 +148,11 @@ create an :class:`Optimizer` class directly::
 Then you can either iteratively or completely optimize the loss with respect to
 a given dataset::
 
+  for _ in opt.iterate(train=downhill.Dataset([sizes, prices])):
+      pass
+
+or::
+
   opt.minimize(train=downhill.Dataset([sizes, prices]))
 
 While running these optimization algorithms, there are several common
@@ -428,11 +433,12 @@ have will be representative of data you will see in the future. Another is to
 regularize_ your loss function; this tends to encourage some solutions to your
 problem (e.g., solutions with small parameter values) and discourage others
 (e.g., solutions that "memorize" outliers). A third way of combatting
-overfitting is by gathering a set of "validation" data and :ref:`stopping the
-training process <early-stopping>` when the performance of your model on the
-validation set stops improving. The algorithms in ``downhill`` implement this
-"early stopping" method; to take advantage of it, just provide a second set of
-data when minimizing your loss::
+overfitting is by gathering a set of "validation" data and stopping the training
+process when the performance of your model on the validation set stops improving
+(see below for details).
+
+The algorithms in ``downhill`` implement this "early stopping" method; to take
+advantage of it, just provide a second set of data when minimizing your loss::
 
   downhill.minimize(loss,
                     inputs=[x, y],
@@ -497,10 +503,10 @@ Training as Iteration
 =====================
 
 The :func:`downhill.minimize` function is actually just a thin wrapper over the
-underlying :func:`downhill.Optimizer.iteropt` method, which you can use directly
+underlying :func:`downhill.Optimizer.iterate` method, which you can use directly
 if you want to do something special during training::
 
-  for tm, vm in opt.iteropt(train, valid, **kwargs):
+  for tm, vm in opt.iterate(train, valid, **kwargs):
       print('training loss:', tm['loss'])
       print('most recent validation loss:', vm['loss'])
 

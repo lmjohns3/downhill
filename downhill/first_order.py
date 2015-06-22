@@ -106,6 +106,6 @@ class NAG(SGD):
        27:372–376.
     '''
 
-    def iteropt(self, *args, **kwargs):
+    def iterate(self, *args, **kwargs):
         kwargs['nesterov'] = True
-        return super(NAG, self).iteropt(*args, **kwargs)
+        return super(NAG, self).iterate(*args, **kwargs)

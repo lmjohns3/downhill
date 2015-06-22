@@ -32,7 +32,7 @@ def build_factor(algo):
 
 
 def assert_progress(opt, train, valid=None, **kwargs):
-    mover = opt.iteropt(train, valid=valid, **kwargs)
+    mover = opt.iterate(train, valid=valid, **kwargs)
     train0, valid0 = next(mover)
     train1, valid1 = next(mover)
     assert train1['loss'] < valid0['loss']   # should have made progress!

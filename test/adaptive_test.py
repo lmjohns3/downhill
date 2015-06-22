@@ -12,7 +12,7 @@ class TestESGD:
 
     def test_default_params(self):
         opt, data = util.build_rosen('esgd')
-        for _ in opt.iteropt(data):
+        for _ in opt.iterate(data):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.ewma.eval(), np.exp(-np.log(2) / 14))
             assert np.allclose(opt.epsilon.eval(), 1e-8)
@@ -20,7 +20,7 @@ class TestESGD:
 
     def test_params(self):
         opt, data = util.build_rosen('esgd')
-        for _ in opt.iteropt(data,
+        for _ in opt.iterate(data,
                              learning_rate=0.3,
                              rms_halflife=10,
                              rms_regularizer=20):
@@ -39,7 +39,7 @@ class TestRProp:
 
     def test_default_params(self):
         opt, data = util.build_rosen('rprop')
-        for _ in opt.iteropt(data):
+        for _ in opt.iterate(data):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.step_increase.eval(), 1.01)
             assert np.allclose(opt.step_decrease.eval(), 0.99)
@@ -49,7 +49,7 @@ class TestRProp:
 
     def test_params(self):
         opt, data = util.build_rosen('rprop')
-        for _ in opt.iteropt(data,
+        for _ in opt.iterate(data,
                              learning_rate=0.3,
                              rprop_increase=22,
                              rprop_decrease=101,
@@ -72,14 +72,14 @@ class TestADAGRAD:
 
     def test_default_params(self):
         opt, data = util.build_rosen('adagrad')
-        for _ in opt.iteropt(data):
+        for _ in opt.iterate(data):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.epsilon.eval(), 1e-8)
             break
 
     def test_params(self):
         opt, data = util.build_rosen('adagrad')
-        for _ in opt.iteropt(data, regularizer=0.1):
+        for _ in opt.iterate(data, regularizer=0.1):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.epsilon.eval(), 0.1)
             break
@@ -94,7 +94,7 @@ class TestRMSProp:
 
     def test_default_params(self):
         opt, data = util.build_rosen('rmsprop')
-        for _ in opt.iteropt(data):
+        for _ in opt.iterate(data):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.ewma.eval(), np.exp(-np.log(2) / 14))
             assert np.allclose(opt.epsilon.eval(), 1e-8)
@@ -102,7 +102,7 @@ class TestRMSProp:
 
     def test_params(self):
         opt, data = util.build_rosen('rmsprop')
-        for _ in opt.iteropt(data,
+        for _ in opt.iterate(data,
                              learning_rate=0.3,
                              rms_halflife=10,
                              rms_regularizer=20):
@@ -121,14 +121,14 @@ class TestADADELTA:
 
     def test_default_params(self):
         opt, data = util.build_rosen('adadelta')
-        for _ in opt.iteropt(data):
+        for _ in opt.iterate(data):
             assert np.allclose(opt.ewma.eval(), np.exp(-np.log(2) / 14))
             assert np.allclose(opt.epsilon.eval(), 1e-8)
             break
 
     def test_params(self):
         opt, data = util.build_rosen('adadelta')
-        for _ in opt.iteropt(data,
+        for _ in opt.iterate(data,
                              rms_halflife=10,
                              rms_regularizer=20):
             assert np.allclose(opt.ewma.eval(), np.exp(-np.log(2) / 10))
@@ -145,7 +145,7 @@ class TestAdam:
 
     def test_default_params(self):
         opt, data = util.build_rosen('adam')
-        for _ in opt.iteropt(data):
+        for _ in opt.iterate(data):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.beta1_decay.eval(), 1 - 1e-6)
             assert np.allclose(opt.beta1.eval(), np.exp(-np.log(2) / 7))
@@ -155,7 +155,7 @@ class TestAdam:
 
     def test_params(self):
         opt, data = util.build_rosen('adam')
-        for _ in opt.iteropt(data,
+        for _ in opt.iterate(data,
                              learning_rate=0.3,
                              beta1_decay=0.5,
                              beta1_halflife=10,

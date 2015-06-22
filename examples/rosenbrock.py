@@ -46,7 +46,7 @@ def build_and_trace(algo, init, limit=100, **kwargs):
     kw = dict(min_improvement=0, patience=0, max_gradient_norm=100)
     kw.update(kwargs)
     xs, ys, loss = [], [], []
-    for tm, _ in build(algo, init).iteropt([[]], **kw):
+    for tm, _ in build(algo, init).iterate([[]], **kw):
         if len(init) == 2:
             xs.append(tm['x'])
             ys.append(tm['y'])

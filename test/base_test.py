@@ -40,7 +40,7 @@ class TestOptimizer:
 
         # run the optimizer for three iterations. check that the x and y values
         # (being monitored) increase at each iteration.
-        for i, (tm, vm) in enumerate(opt.iteropt(train)):
+        for i, (tm, vm) in enumerate(opt.iterate(train)):
             assert tm['x'] >= vm['x']
             assert tm['y'] >= vm['y']
             if i == 2:
@@ -52,7 +52,7 @@ class TestOptimizer:
 
         # run the optimizer for two iterations. check that the u and v values
         # (being monitored) are reasonable at the start.
-        for i, (tm, vm) in enumerate(opt.iteropt(train)):
+        for i, (tm, vm) in enumerate(opt.iterate(train)):
             assert abs(vm['u<1'] - 0.001) < 1e-5
             assert vm['u<-1'] == 0
             assert vm['v<1'] == 1
@@ -62,13 +62,13 @@ class TestOptimizer:
 
     def test_gradient_clip(self):
         opt, data = util.build_rosen('tester')
-        for _ in opt.iteropt(data, gradient_clip=1):
+        for _ in opt.iterate(data, gradient_clip=1):
             assert opt.max_gradient_elem == 1
             break
-        for _ in opt.iteropt(data, max_gradient_clip=2):
+        for _ in opt.iterate(data, max_gradient_clip=2):
             assert opt.max_gradient_elem == 2
             break
-        for _ in opt.iteropt(data, max_gradient_elem=3):
+        for _ in opt.iterate(data, max_gradient_elem=3):
             assert opt.max_gradient_elem == 3
             break
 

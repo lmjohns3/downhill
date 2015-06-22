@@ -22,7 +22,7 @@ class TestSGD:
 
     def test_default_params(self):
         opt, data = util.build_rosen('sgd')
-        for _ in opt.iteropt(data):
+        for _ in opt.iterate(data):
             assert opt.nesterov == False
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.momentum, 0)
@@ -34,7 +34,7 @@ class TestSGD:
 
     def test_params(self):
         opt, data = util.build_rosen('sgd')
-        for _ in opt.iteropt(data,
+        for _ in opt.iterate(data,
                              learning_rate=0.3,
                              momentum=10,
                              patience=20,
@@ -61,7 +61,7 @@ class TestNAG:
 
     def test_default_params(self):
         opt, data = util.build_rosen('nag')
-        for _ in opt.iteropt(data):
+        for _ in opt.iterate(data):
             assert opt.nesterov == True
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.momentum, 0)
@@ -73,7 +73,7 @@ class TestNAG:
 
     def test_params(self):
         opt, data = util.build_rosen('nag')
-        for _ in opt.iteropt(data,
+        for _ in opt.iterate(data,
                              learning_rate=0.3,
                              momentum=10,
                              patience=20,

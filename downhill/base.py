@@ -281,7 +281,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         '''
         pass
 
-    def iteropt(self,
+    def iterate(self,
                 train,
                 valid=None,
                 patience=5,
@@ -416,7 +416,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
     def minimize(self, *args, **kwargs):
         '''Optimize our loss exhaustively.
 
-        This method is a thin wrapper over the :func:`iteropt` method. It simply
+        This method is a thin wrapper over the :func:`iterate` method. It simply
         exhausts the iterative optimization process and returns the final
         monitor values.
 
@@ -430,7 +430,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             dataset.
         '''
         monitors = None
-        for monitors in self.iteropt(*args, **kwargs):
+        for monitors in self.iterate(*args, **kwargs):
             pass
         return monitors
 
