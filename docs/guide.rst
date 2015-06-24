@@ -50,7 +50,7 @@ this example, the loss :math:`\mathcal{L}` might be expressed as the sum of the
 differences between the values on the line and the observed data:
 
 .. math::
-   \mathcal{L}(m,b) = \sum_{i=1}^N \| m x_i + b - y_i \|_2^2
+   \mathcal{L}(m,b) = \sum_{i=1}^N ( m x_i + b - y_i )^2
 
 .. _"loss" function: https://en.wikipedia.org/wiki/Loss_function
 
