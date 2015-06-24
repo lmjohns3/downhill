@@ -117,38 +117,293 @@ The ``downhill`` package provides a single high-level function,
 :func:`downhill.minimize`, that can be used as a black-box optimizer for losses.
 In addition, there are lower-level calls that provide more control over the
 interaction between your code and ``downhill``. First, we'll look at the
-high-level minimize function and then discuss some common optimization
-hyperparameters.
+high-level minimize function, then we'll talk about what happens under the hood.
 
 Once you've defined your loss using Theano, you can minimize it with a single
 function call. Here, we'll minimize the loss defined above::
 
-  downhill.minimize(loss=loss, inputs=[x, y], train=[sizes, prices])
+  downhill.minimize(loss, [sizes, prices], inputs=[x, y])
 
-You just specify the loss to minimize, the inputs that the loss requires, and a
-set of "training" data to use for computing the loss. The ``downhill`` code will
-select an optimization algorithm, identify shared variables in the loss that
-need optimization, and run the optimization process to completion. After the
-minimization has finished, the shared variables in your loss will be updated to
-their optimal values.
+You just specify the loss to minimize, some data to use for computing the loss,
+and the identities of the symbolic inputs that the loss requires. The
+``downhill`` code will select an optimization algorithm (currently the default
+is :class:`RMSProp <downhill.adaptive.RMSProp>`, identify shared variables in
+the loss that need optimization, and run the optimization process to completion.
+After the minimization has finished, the shared variables in your loss will be
+updated to their optimal values. You can retrieve their values using any of the
+methods of `shared variables`_::
 
-There is much to say about data---see :ref:`providing-data` for more
-information---but briefly, the training data is typically a list of ``numpy``
-arrays of the measurements you've made for your problem; for the house price
-regression, the arrays for house size and house price might be set up like
-this::
+  m_value, b_value = m.get_value(), b.get_value()
+
+There is much to say about providing data---see :ref:`providing-data` for more
+information---but briefly, the data you will need to provide is typically a list
+of ``numpy`` arrays of the measurements you've made for your problem. For the
+house price regression example, the arrays for house size and house price might
+be set up like this::
 
   sizes = np.array([1200, 2013, 8129, 2431, 2211])
   prices = np.array([103020, 203310, 3922013, 224321, 449020])
 
-While running the optimization procedure, there are several different algorithms
-to choose from, and there are also several common hyperparameters that might be
-important to tune properly to get the best performance.
+.. _iterative-optimization:
+
+Iterative Optimization
+----------------------
+
+The :func:`downhill.minimize` function is actually just a  wrapper that performs
+several common lower-level tasks to optimize your loss. These tasks include:
+
+- creating :class:`datasets <downhill.dataset.Dataset>` to iterate over your
+  data,
+- creating an :class:`Optimizer <downhill.base.Optimizer>`, and
+- running the optimizer to completion.
+
+You can perform these tasks yourself to retain more control over the
+optimization process. In particular, it is often useful to call the
+:func:`downhill.Optimizer.iterate` method yourself, because it gives you access
+to the state of the optimizer at each step.
+
+To learn more about this, have a look at the following example::
+
+  opt = downhill.build('rmsprop', loss=loss, inputs=[x, y])
+  for tm, vm in opt.iterate(downhill.Dataset([sizes, prices])):
+      print('training loss:', tm['loss'])
+      print('most recent validation loss:', vm['loss'])
+
+This code constructs an :class:`Optimizer <downhill.base.Optimizer>` object
+(specifically, an :class:`RMSProp optimizer <downhill.adaptive.RMSProp>`) and
+then uses it to step through the optimization process iteratively.
+
+After each iteration, it prints out the mean value of the loss function on the
+training data and the most recent validation data. We'll step through how this
+works, but first we need to talk a little bit about data.
+
+.. _training-validation:
+
+Training and Validation
+-----------------------
+
+You might have noticed that the formulation of the loss given at the top of this
+guide contains a sum over all of the data points that you've observed
+:math:`(x_i, y_i)`. (For the house price example, these data are stored in the
+``sizes`` and ``prices`` arrays.) This is a very common state of affairs for
+many types of losses.
+
+But for a typical regression problem, it's not feasible or even possible to
+gather *all* of the relevant data---either it's too expensive to do that, or
+there might be new data created in the future that you just don't have any way
+of predicting.
+
+Given this paucity of data, you're running a risk in using a stochastic
+optimizer to solve your problem: the data you have collected might not be
+representative of the data that you haven't collected! If the data you collected
+are quite different from the "true" data out there in the world, then when you
+optimize your loss, the optimal model might be skewed toward your dataset, and
+your model might not perform well on "unseen" data.
+
+This problem is generally referred to as overfitting_ and is a risk with many
+types of models. Generally the risk of overfitting increases with the complexity
+of your model, and also increases when you don't have a lot of data.
+
+There are many ways to combat overfitting. One is to tighten your belt and
+gather more data, which increases the chance that the data you do have will be
+representative of data you don't yet have. Another is to regularize_ your loss
+function; this tends to encourage some solutions to your problem (e.g.,
+solutions with small parameter values) and discourage others (e.g., solutions
+that "memorize" outliers). A third way of combatting overfitting is by gathering
+an additional set of "validation" data and stopping the training process when
+the performance of your model on the validation set stops improving---this is
+known as "early stopping."
+
+.. _overfitting: https://en.wikipedia.org/wiki/Overfitting
+.. _regularize: https://en.wikipedia.org/wiki/Regularization_(mathematics)
+
+.. _early-stopping:
+
+Early Stopping
+--------------
+
+The algorithms in ``downhill`` implement the "early stopping" regularization
+method. To take advantage of it, just provide a second set of data when
+minimizing your loss::
+
+  opt = downhill.build('rmsprop', loss=loss, inputs=[x, y])
+  train = downhill.Dataset([train_sizes, train_prices])
+  valid = downhill.Dataset([valid_sizes, valid_prices])
+  for tm, vm in opt.iterate(train, valid):
+      print('training loss:', tm['loss'])
+      print('most recent validation loss:', vm['loss'])
+
+Here we'll assume that you've gathered another few sizes and prices and put them
+in a new pair of ``numpy`` arrays.
+
+Now we can dive into the optimization process. During each iteration, a set of
+"training" data are used to compute gradient-based updates to the model
+parameters, and the parameter values are updated. Then, the ``iterate`` method
+yields a pair of dictionaries to the caller: the first contains measured values
+of the loss on the training data during that iteration, and the second contains
+measured values of the loss on the validation data. We'll talk more about
+validation data belowyield a pair of dictionaries after each optimization epoch;
+these dictionaries provide information about the performance of the optimization
+procedure. The keys and values in each dictionary give the costs and monitors
+that are computed during optimization. There will always be a ``'loss'`` key
+that gives the value of the loss function being optimized. In addition, any
+monitors that were defined when creating the optimizer will also be provided in
+these dictionaries.
+
+
+continue to iterate as long as the training procedure you're using doesn't run
+out of patience. So the 50 iterations you're seeing might vary depending on the
+model, your dataset, and your training algorithm & parameters. (E.g., the
+"sample" trainer only produces one result, because sampling from the training
+dataset just happens once, but the SGD-based trainers will run for multiple
+iterations.)
+
+For each iteration produced by itertrain using a SGD-based algorithm, the
+trainer applies ``train_batches`` gradient updates to the model. Each of these
+batches contains ``batch_size`` training examples and computes a single gradient
+update. After ``train_batches`` have been processed, the training dataset is
+shuffled, so that subsequent iterations might see the same set of batches, but
+not in the same order.
+
+The validation dataset is run through the model to test convergence every
+``validate_every`` iterations. If there is no progress for ``patience`` of these
+validations, then the training algorithm halts and returns.
+
+In theanets, the patience is the number of failed validation attempts
+that we're willing to tolerate before seeing any progress. So theanets
+will make (``patience`` * ``validate_every``) training updates, checking
+(patience) times for improvement before deciding that training should
+halt.
+
+In some other tools, the patience is the number of training updates
+that we're willing to wait before seeing any progress; these tools
+will make (``patience``) training updates, checking (``patience`` /
+``validate_every``) times for improvement before deciding that training
+should halt. With this definition, you do want to make sure the
+validation frequency is smaller than half the patience, to have a good
+chance of seeing progress before halting.
+
+It's important that the validation dataset not be used during optimization with
+early stopping; the idea is that you want to use a small part of the data you've
+gathered as a sort of canary_ to guess when the performance of your model will
+stop improving when you actually take it out into the world and use it.
+
+.. _canary: https://en.wikipedia.org/wiki/Animal_sentinel#Historical_examples
+
+If you do not specify a validation dataset, the training dataset will also be
+used for validation, which effectively disables early stopping.
+
+.. _providing-data:
+
+Providing Data
+==============
+
+As described above, you'll often need to provide data to ``downhill`` so that
+you can compute the loss and optimize the parameters for your problem. There are
+two ways of passing data to ``downhill``: using arrays and using callables.
+
+.. _data-using-arrays:
+
+Using Arrays
+------------
+
+A fairly typical use case for optimizing a loss for a small-ish problem is to
+construct a ``numpy`` array containing the data you have::
+
+  dataset = np.load(filename)
+  downhill.minimize(..., train=dataset)
+
+Sometimes the data available for training a network model exceeds the available
+resources (e.g., memory) on the computer at hand. There are several ways of
+handling this type of situation. If your data are already in a ``numpy`` array
+stored on disk, you might want to try loading the array using ``mmap``::
+
+  dataset = np.load(filename, mmap_mode='r')
+  downhill.minimize(..., train=dataset)
+
+Alternatively, you might want to load just part of the data and train on that,
+then load another part and train on it::
+
+  for filename in filenames:
+      dataset = np.load(filename, mmap_mode='r')
+      downhill.minimize(..., train=dataset)
+
+Finally, you can potentially handle large datasets by using a callable to
+provide data to the training algorithm.
+
+.. _data-using-callables:
+
+Using Callables
+---------------
+
+Instead of an array of data, you can provide a callable for a :class:`Dataset
+<downhill.dataset.Dataset>`. This callable must take no arguments and must
+return a list of ``numpy`` arrays of the proper shape for your loss.
+
+During minimization, the callable will be invoked every time the optimization
+algorithm requires a batch of training (or validation) data. Therefore, your
+callable should return at least one array containing a batch of data; if your
+model requires multiple arrays per batch (e.g., if you are minimizing a loss
+that requires some "input" data as well as some "output" data), then your
+callable should return a list containing the correct number of arrays (e.g., an
+array of "inputs" and the corresponding "outputs").
+
+For example, this code defines a ``batch()`` helper that could be used for a
+loss that needs one input. The callable chooses a random dataset and a random
+offset for each batch::
+
+  SOURCES = 'foo.npy', 'bar.npy', 'baz.npy'
+  BATCH_SIZE = 64
+
+  def batch():
+      X = np.load(np.random.choice(SOURCES), mmap_mode='r')
+      i = np.random.randint(len(X))
+      return X[i:i+BATCH_SIZE]
+
+  downhill.minimize(..., train=batch)
+
+If you need to maintain more state than is reasonable from a single closure, you
+can also encapsulate the callable inside a class. Just make sure instances of
+the class are callable by defining the ``__call__`` method. For example, this
+class loads data from a series of ``numpy`` arrays on disk, but only loads one
+of the on-disk arrays into memory at a given time::
+
+  class Loader:
+      def __init__(sources=('foo.npy', 'bar.npy', 'baz.npy'), batch_size=64):
+          self.sources = sources
+          self.batch_size = batch_size
+          self.src = -1
+          self.idx = 0
+          self.X = ()
+
+      def __call__(self):
+          if self.idx + self.batch_size > len(self.X):
+              self.idx = 0
+              self.src = (self.src + 1) % len(self.sources)
+              self.X = np.load(self.sources[self.src], mmap_mode='r')
+          try:
+              return self.X[self.idx:self.idx+self.batch_size]
+          finally:
+              self.idx += self.batch_size
+
+  downhill.minimize(..., train=Loader())
+
+There are almost limitless possibilities for using callables to interface with
+the optimization process.
+
+.. _tuning:
+
+Tuning
+======
+
+The ``downhill`` package provides several ways of tuning the optimization
+process. There are many different optimization algorithms available, and there
+are also several common learning hyperparameters that might require tuning.
 
 .. _algorithm:
 
-Algorithms
-----------
+Optimization Algorithms
+-----------------------
 
 The following algorithms are currently available in ``downhill``:
 
@@ -171,6 +426,10 @@ problems. In general, several of the the adaptive procedures seem to work well
 across different problems, particularly :class:`Adam <downhill.adaptive.Adam>`,
 :class:`ADADELTA <downhill.adaptive.ADADELTA>`, and :class:`RMSProp
 <downhill.adaptive.RMSProp>`.
+
+Many of these algorithms, being based on stochastic gradient descent, rely on a
+common set of hyperparameters that control the speed of convergence and the
+reliability of the optimization process over time.
 
 .. _learning-rate:
 
@@ -318,233 +577,3 @@ correct direction, but their magnitudes will be rescaled to avoid steps that are
 too large. Gradients with values smaller than the thresholds (presumably,
 gradients near an optimum will be small) will not be affected. In both cases,
 the strategy of taking small steps proportional to the gradient seems to work.
-
-.. _optimizing-iteratively:
-
-Optimizing Iteratively
-----------------------
-
-The :func:`downhill.minimize` function is actually just a thin wrapper over the
-underlying :func:`downhill.Optimizer.iterate` method, which you can use directly
-if you want to do something special during training::
-
-  opt = downhill.build('rmsprop', loss=loss, inputs=[x, y])
-  for tm, vm in opt.iterate(train=[sizes, prices], momentum=0.9):
-      print('training loss:', tm['loss'])
-      print('most recent validation loss:', vm['loss'])
-
-Here, we've constructed an :class:`Optimizer <downhill.base.Optimizer>` object,
-and we're using it to manually step through the optimization procedure.
-
-Optimizers yield a pair of dictionaries after each optimization epoch; these
-dictionaries provide information about the performance of the optimization
-procedure. The keys and values in each dictionary give the costs and monitors
-that are computed during optimization. There will always be a ``'loss'`` key
-that gives the value of the loss function being optimized. In addition, any
-monitors that were defined when creating the optimizer will also be provided in
-these dictionaries.
-
-.. _providing-data:
-
-Providing Data
-==============
-
-You might have noticed that the formulation of the loss given above contains a
-sum over all of the observed data points :math:`(x_i, y_i)`. This is a very
-common state of affairs for many types of losses.
-
-For most problems it's not possible to collect all the possible data points out
-there! So you'll never actually know the "real" value of the loss for your
-problem; instead you have to estimate it by collecting some data and hoping that
-your collection is somehow representative of the data you'll encounter in the
-future.
-
-Either way, you'll often need to provide data to ``downhill`` so that you can
-compute the loss and optimize the parameters. There are two ways of passing data
-to ``downhill``: using arrays and using callables.
-
-.. _data-using-arrays:
-
-Using Arrays
-------------
-
-A fairly typical use case for optimizing a loss for a small-ish problem is to
-construct a ``numpy`` array containing the data you have::
-
-  dataset = np.load(filename)
-  downhill.minimize(..., train=dataset)
-
-Sometimes the data available for training a network model exceeds the available
-resources (e.g., memory) on the computer at hand. There are several ways of
-handling this type of situation. If your data are already in a ``numpy`` array
-stored on disk, you might want to try loading the array using ``mmap``::
-
-  dataset = np.load(filename, mmap_mode='r')
-  downhill.minimize(..., train=dataset)
-
-Alternatively, you might want to load just part of the data and train on that,
-then load another part and train on it::
-
-  for filename in filenames:
-      dataset = np.load(filename, mmap_mode='r')
-      downhill.minimize(..., train=dataset)
-
-Finally, you can potentially handle large datasets by using a callable to
-provide data to the training algorithm.
-
-.. _data-using-callables:
-
-Using Callables
----------------
-
-Instead of an array of data, you can provide a callable for a dataset. This
-callable must take no arguments and must return one or more ``numpy`` arrays of
-the proper shape for your loss.
-
-During minimization, the callable will be invoked every time the optimization
-algorithm requires a batch of training (or validation) data. Therefore, your
-callable should return at least one array containing a batch of data; if your
-model requires multiple arrays per batch (e.g., if you are minimizing a loss
-that requires some "input" data as well as some "output" data), then your
-callable should return a list containing the correct number of arrays (e.g., an
-array of "inputs" and the corresponding "outputs").
-
-For example, this code defines a ``batch()`` helper that could be used for a
-loss that needs one input. The callable chooses a random dataset and a random
-offset for each batch::
-
-  SOURCES = 'foo.npy', 'bar.npy', 'baz.npy'
-  BATCH_SIZE = 64
-
-  def batch():
-      X = np.load(np.random.choice(SOURCES), mmap_mode='r')
-      i = np.random.randint(len(X))
-      return X[i:i+BATCH_SIZE]
-
-  downhill.minimize(..., train=batch)
-
-If you need to maintain more state than is reasonable from a single closure, you
-can also encapsulate the callable inside a class. Just make sure instances of
-the class are callable by defining the ``__call__`` method. For example, this
-class loads data from a series of ``numpy`` arrays on disk, but only loads one
-of the on-disk arrays into memory at a given time::
-
-  class Loader:
-      def __init__(sources=('foo.npy', 'bar.npy', 'baz.npy'), batch_size=64):
-          self.sources = sources
-          self.batch_size = batch_size
-          self.src = -1
-          self.idx = 0
-          self.X = ()
-
-      def __call__(self):
-          if self.idx + self.batch_size > len(self.X):
-              self.idx = 0
-              self.src = (self.src + 1) % len(self.sources)
-              self.X = np.load(self.sources[self.src], mmap_mode='r')
-          try:
-              return self.X[self.idx:self.idx+self.batch_size]
-          finally:
-              self.idx += self.batch_size
-
-  downhill.minimize(..., train=Loader())
-
-There are almost limitless possibilities for using callables to interface with
-the optimization process.
-
-.. _training-validation:
-
-Training and Validation
------------------------
-
-Let's talk for a minute about data. For your typical regression problem, it's
-not feasible or even possible to gather *all* of the relevant data---either it's
-too expensive to do that, or there might be new data created in the future that
-you just don't have any way of predicting.
-
-Given this paucity of data, you're running a risk in using a stochastic
-optimizer to solve your problem: the data you have collected might not be
-representative of the data that you haven't collected. If this is true, then
-your estimates of the loss might be skewed, because these loss estimates are
-computed using the "training" data you provide to the optimization algorithm. As
-a result, the "optimal" model you find might actually only be optimal with
-respect to the data you collected. It might not work well on future data, for
-example.
-
-This problem is generally referred to as overfitting_. An optimization algorithm
-is designed to minimize the loss on your problem; in some cases you might even
-be able to get perfect performance on the data you've collected. But in many
-situations, getting perfect performance on your training data is nearly
-synonymous with poor performance on future or unseen data!
-
-.. _overfitting: https://en.wikipedia.org/wiki/Overfitting
-
-There are many ways to combat overfitting. One is to tighten your belt and just
-gather more data---having more data is a way of ensuring that the data you do
-have will be representative of data you will see in the future. Another is to
-regularize_ your loss function; this tends to encourage some solutions to your
-problem (e.g., solutions with small parameter values) and discourage others
-(e.g., solutions that "memorize" outliers). A third way of combatting
-overfitting is by gathering a set of "validation" data and stopping the training
-process when the performance of your model on the validation set stops improving
-(see below for details).
-
-The algorithms in ``downhill`` implement this "early stopping" method; to take
-advantage of it, just provide a second set of data when minimizing your loss::
-
-  downhill.minimize(loss,
-                    inputs=[x, y],
-                    train=[train_sizes, train_prices],
-                    valid=[valid_sizes, valid_prices])
-
-.. _regularize: https://en.wikipedia.org/wiki/Regularization_(mathematics)
-
-It's important that the validation dataset not be used during optimization with
-early stopping; the idea is that you want to use a small part of the data you've
-gathered as a sort of canary_ to guess when the performance of your model will
-stop improving when you actually take it out into the world and use it.
-
-.. _canary: https://en.wikipedia.org/wiki/Animal_sentinel#Historical_examples
-
-If you do not specify a validation dataset, the training dataset will also be
-used for validation, which effectively disables early stopping.
-
-.. _early-stopping:
-
-Early Stopping
---------------
-
-When you make a call to ``train()`` (or ``itertrain()``), ``theanets`` begins an
-optimization procedure.
-
-continue to iterate as long as the training procedure you're using doesn't run
-out of patience. So the 50 iterations you're seeing might vary depending on the
-model, your dataset, and your training algorithm & parameters. (E.g., the
-"sample" trainer only produces one result, because sampling from the training
-dataset just happens once, but the SGD-based trainers will run for multiple
-iterations.)
-
-For each iteration produced by itertrain using a SGD-based algorithm, the
-trainer applies ``train_batches`` gradient updates to the model. Each of these
-batches contains ``batch_size`` training examples and computes a single gradient
-update. After ``train_batches`` have been processed, the training dataset is
-shuffled, so that subsequent iterations might see the same set of batches, but
-not in the same order.
-
-The validation dataset is run through the model to test convergence every
-``validate_every`` iterations. If there is no progress for ``patience`` of these
-validations, then the training algorithm halts and returns.
-
-In theanets, the patience is the number of failed validation attempts
-that we're willing to tolerate before seeing any progress. So theanets
-will make (``patience`` * ``validate_every``) training updates, checking
-(patience) times for improvement before deciding that training should
-halt.
-
-In some other tools, the patience is the number of training updates
-that we're willing to wait before seeing any progress; these tools
-will make (``patience``) training updates, checking (``patience`` /
-``validate_every``) times for improvement before deciding that training
-should halt. With this definition, you do want to make sure the
-validation frequency is smaller than half the patience, to have a good
-chance of seeing progress before halting.
