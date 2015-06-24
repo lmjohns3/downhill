@@ -9,13 +9,16 @@ def minimize(loss, train, valid=None, params=None, inputs=None, algo='rmsprop',
              train_batches=None, valid_batches=None, **kwargs):
     '''Minimize a loss function with respect to some symbolic parameters.
 
+    Additional keyword arguments are passed to the underlying :class:`Optimizer
+    <downhill.base.Optimizer>` instance.
+
     Parameters
     ----------
     loss : Theano expression
         Loss function to minimize. This must be a scalar-valued expression.
-    train : :class:`Dataset`, ndarray, or callable
+    train : :class:`Dataset <downhill.dataset.Dataset>`, ndarray, or callable
         Dataset to use for computing gradient updates.
-    valid : :class:`Dataset`, ndarray, or callable, optional
+    valid : :class:`Dataset <downhill.dataset.Dataset>`, ndarray, or callable, optional
         Dataset to use for validating the minimization process. The training
         dataset is used if this is not provided.
     params : list of Theano variables, optional
@@ -46,8 +49,6 @@ def minimize(loss, train, valid=None, params=None, inputs=None, algo='rmsprop',
     valid_batches : int, optional
         Number of batches of validation data to iterate over during one pass of
         validation. Defaults to None, which uses the entire validation dataset.
-
-    Additional keyword arguments are passed to the optimizer instance.
 
     Returns
     -------
