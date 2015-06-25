@@ -68,6 +68,7 @@ single call to ``downhill.minimize``::
   downhill.minimize(
       loss=e.mean() + abs(u).mean() + (v * v).mean(),
       train=[y],
+      patience=0,
       batch_size=A,                 # Process y as a single batch.
       max_gradient_norm=1,          # Prevent gradient explosion!
       learning_rate=0.1,
