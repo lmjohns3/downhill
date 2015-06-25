@@ -720,6 +720,23 @@ instance::
       'nag', loss=loss, inputs=[sizes, prices],
       monitors=dict(m=m.sum(), b=b.sum()))
 
+Gradients
+---------
+
+Sometimes when setting parameters like ``learning_rate`` and
+``max_gradient_norm``, it can be quite useful to see how large the gradients of
+your model are. These quantities can be included in the monitors easily by
+setting the ``monitor_gradients`` flag::
+
+  downhill.minimize(
+      loss,
+      [sizes, prices],
+      inputs=[x, y],
+      monitor_gradients=True)
+
+This will include one monitor for each parameter in your model, indicating the
+squared L2 norm of the gradient (averaged across mini-batches).
+
 More Information
 ================
 
