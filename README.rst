@@ -45,6 +45,8 @@ sparse regularizer to encourage small coefficient values.
 Once you have constructed an expression for the loss, you can optimize it with a
 single call to ``downhill.minimize``::
 
+.. code:: python
+
   import climate
   import downhill
   import numpy as np
