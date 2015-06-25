@@ -43,7 +43,7 @@ multiplication as the data model, a squared-error term for optimization, and a
 sparse regularizer to encourage small coefficient values.
 
 Once you have constructed an expression for the loss, you can optimize it with a
-single call to ``downhill.minimize``::
+single call to ``downhill.minimize``:
 
 .. code:: python
 
