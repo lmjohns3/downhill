@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name='downhill',
-    version='0.1.1pre',
+    version='0.2.0',
     packages=setuptools.find_packages(),
     author='Leif Johnson',
     author_email='leif@lmjohns3.com',
