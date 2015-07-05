@@ -3,6 +3,12 @@ import numpy as np
 
 
 class TestDataset:
+    def test_rng(self):
+        ds = downhill.Dataset([np.random.randn(40, 2)], rng=4)
+        assert ds.rng.randint(10) == 7
+        ds = downhill.Dataset([np.random.randn(40, 2)], rng=np.random.RandomState(4))
+        assert ds.rng.randint(10) == 7
+
     def test_name(self):
         ds = downhill.Dataset([np.random.randn(40, 2)], name='foo')
         assert ds.name == 'foo'
