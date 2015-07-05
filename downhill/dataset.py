@@ -9,7 +9,7 @@ estimated using a set of data that we have measured.
 
 import climate
 import collections
-import numpy.random as rng
+import numpy as np
 
 logging = climate.get_logger(__name__)
 
@@ -76,16 +76,24 @@ class Dataset:
     axis : int, optional
         The axis along which to split the data arrays, if the first parameter is
         given as one or more ndarrays. If not provided, defaults to 0.
+
+    rng : :class:`numpy.random.RandomState` or int, optional
+        A random number generator, or an integer seed for a random number
+        generator. If not provided, the random number generator will be created
+        with an automatically chosen seed.
     '''
 
     _count = 0
 
-    def __init__(self, inputs, name=None, batch_size=32, iteration_size=None, axis=0):
+    def __init__(self, inputs, name=None, batch_size=32, iteration_size=None, axis=0, rng=None):
         '''Create a minibatch dataset from data arrays or a callable.'''
         self.name = name or 'dataset{}'.format(Dataset._count)
         Dataset._count += 1
         self.batch_size = batch_size
         self.iteration_size = iteration_size
+        self.rng = rng
+        if rng is None or isinstance(rng, int):
+            self.rng = np.random.RandomState(rng)
 
         self._batches = None
         self._callable = None
@@ -145,7 +153,7 @@ class Dataset:
         effect.
         '''
         if self._batches is not None:
-            rng.shuffle(self._batches)
+            self.rng.shuffle(self._batches)
 
     def iterate(self, shuffle=True):
         '''Iterate over batches in the dataset.
