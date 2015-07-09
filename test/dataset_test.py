@@ -11,12 +11,18 @@ class TestDataset:
         assert ds.name[7:].isdigit()
 
     def test_batch_size(self):
-        ds = downhill.Dataset([np.random.randn(40, 2)], batch_size=10)
+        ds = downhill.Dataset([np.random.randn(40, 2)], batch_size=10, rng=4)
         assert len(ds._batches) == 4
         assert ds._batches[0][0].shape == (10, 2)
-        ds = downhill.Dataset([np.random.randn(40, 2)], batch_size=11)
-        assert len(ds._batches) == 3
+        assert ds._batches[1][0].shape == (10, 2)
+        assert ds._batches[2][0].shape == (10, 2)
+        assert ds._batches[3][0].shape == (10, 2)
+        ds = downhill.Dataset([np.random.randn(40, 2)], batch_size=11, rng=4)
+        assert len(ds._batches) == 4
         assert ds._batches[0][0].shape == (11, 2)
+        assert ds._batches[1][0].shape == (11, 2)
+        assert ds._batches[2][0].shape == (7, 2)
+        assert ds._batches[3][0].shape == (11, 2)
 
     def test_iteration_size(self):
         def batches_unchanged(previous):
