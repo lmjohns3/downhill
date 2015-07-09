@@ -3,6 +3,8 @@ from .base import build, Optimizer
 from .dataset import Dataset
 from .first_order import *
 
+__version__ = '0.3.0pre'
+
 
 def minimize(loss, train, valid=None, params=None, inputs=None, algo='rmsprop',
              updates=(), monitors=(), monitor_gradients=False, batch_size=32,
