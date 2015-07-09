@@ -3,7 +3,7 @@ from .base import build, Optimizer
 from .dataset import Dataset
 from .first_order import *
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 
 def minimize(loss, train, valid=None, params=None, inputs=None, algo='rmsprop',
