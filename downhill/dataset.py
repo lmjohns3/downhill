@@ -128,13 +128,9 @@ class Dataset:
             batch = []
             for x in inputs:
                 slices = [slice(None) for _ in x.shape]
-                slices[axis] = slice(i, i + self.batch_size)
-                b = x[tuple(slices)]
-                if b.shape[axis] != self.batch_size:
-                    break
-                batch.append(b)
-            else:
-                self._batches.append(batch)
+                slices[axis] = slice(i, min(L, i + self.batch_size))
+                batch.append(x[tuple(slices)])
+            self._batches.append(batch)
 
         self.shuffle()
 
