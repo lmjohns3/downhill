@@ -8,6 +8,7 @@ import numpy as np
 import theano
 import theano.tensor as TT
 import warnings
+import sys
 
 from . import util
 
@@ -103,7 +104,10 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             self._monitor_exprs.append(monitor)
         if monitor_gradients:
             for p, g in zip(self._params, TT.grad(self._loss, self._params)):
-                self._monitor_names.append('∂{}'.format(p.name))
+                if sys.stdout.encoding == "UTF-8":
+                    self._monitor_names.append('∂{}'.format(p.name))
+                else:
+                    self._monitor_names.append('grad({})'.format(p.name))
                 self._monitor_exprs.append((g * g).sum())
 
     def _compile(self):
