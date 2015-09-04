@@ -284,6 +284,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 valid=None,
                 patience=5,
                 validate_every=10,
+                max_updates=None,
                 min_improvement=0,
                 max_gradient_norm=0,
                 max_gradient_elem=0,
@@ -319,6 +320,10 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         validate_every : int, optional
             Evaluate the loss on the validation dataset after making this many
             passes over the training data. Defaults to 10.
+        max_updates : int, optional
+            If specified, halt optimization after this many gradient updates
+            have been processed. If not provided, uses early stopping to decide
+            when to halt.
         min_improvement : float, optional
             Insist that the validation loss must improve by this relative amount
             before considering that the optimization has made progress. The
@@ -377,6 +382,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         self.nesterov = nesterov
         logging.info('-- patience = %s', patience)
         logging.info('-- validate_every = %s', validate_every)
+        logging.info('-- max_updates = %s', max_updates)
         logging.info('-- min_improvement = %s', min_improvement)
         logging.info('-- max_gradient_norm = %s', max_gradient_norm)
         logging.info('-- max_gradient_elem = %s', max_gradient_elem)
@@ -391,7 +397,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             valid = train
         iteration = 0
         training = validation = None
-        while True:
+        while max_updates is None or iteration < max_updates:
             if not iteration % self.validate_every:
                 try:
                     validation = self.evaluate(valid)
