@@ -110,7 +110,9 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                     name = 'unnamed{}'.format(unnamed)
                     unnamed += 1
                     logging.warn('%s unnamed, will be "%s" internally', p, name)
-                d = '∂{}' if sys.stdout.encoding == 'UTF-8' else 'grad({})'
+                d = '∂{}'
+                if getattr(sys.stdout, 'encoding', 'UTF-8') == 'UTF-8':
+                    d = 'grad({})'
                 self._monitor_names.append(d.format(name))
                 self._monitor_exprs.append((g * g).sum())
 
