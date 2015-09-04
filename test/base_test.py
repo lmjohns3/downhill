@@ -45,6 +45,19 @@ class TestOptimizer:
             assert tm['y'] >= vm['y']
             assert i < 3
 
+    def test_rosen_unnamed(self):
+        opt, train = util.build_rosen('tester', name=False, monitor_gradients=True)
+        assert isinstance(opt, Tester)
+
+        # run the optimizer for three iterations. check that the x and y values
+        # (being monitored) increase at each iteration.
+        for i, (tm, vm) in enumerate(opt.iterate(train, max_updates=3)):
+            assert tm['x'] >= vm['x']
+            assert tm['y'] >= vm['y']
+            # check there's a manually-named parameter in here.
+            assert 1 == sum(1 for k in tm if 'unnamed' in k), tm
+            assert i < 3
+
     def test_factor(self):
         opt, train = util.build_factor('tester')
         assert isinstance(opt, Tester)

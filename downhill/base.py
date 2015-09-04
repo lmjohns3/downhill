@@ -103,9 +103,15 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             self._monitor_names.append(name)
             self._monitor_exprs.append(monitor)
         if monitor_gradients:
+            unnamed = 0
             for p, g in zip(self._params, TT.grad(self._loss, self._params)):
+                name = p.name
+                if not name:
+                    name = 'unnamed{}'.format(unnamed)
+                    unnamed += 1
+                    logging.warn('%s unnamed, will be "%s" internally', p, name)
                 d = '∂{}' if sys.stdout.encoding == 'UTF-8' else 'grad({})'
-                self._monitor_names.append(d.format(p.name))
+                self._monitor_names.append(d.format(name))
                 self._monitor_exprs.append((g * g).sum())
 
     def _compile(self):

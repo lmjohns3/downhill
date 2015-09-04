@@ -4,12 +4,14 @@ import theano
 import theano.tensor as TT
 
 
-def build_rosen(algo):
-    x = theano.shared(-3 + np.zeros((2, ), 'f'), name='x')
+def build_rosen(algo, name=True, monitor_gradients=False):
+    x = theano.shared(-3 + np.zeros((2, ), 'f'), name='x' if name else None)
     return downhill.build(
         algo,
         loss=(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2).sum(),
-        monitors=[('x', x[:-1].sum()), ('y', x[1:].sum())]), [[]]
+        monitors=[('x', x[:-1].sum()), ('y', x[1:].sum())],
+        monitor_gradients=monitor_gradients,
+    ), [[]]
 
 
 def build_factor(algo):
