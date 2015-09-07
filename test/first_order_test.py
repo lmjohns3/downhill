@@ -23,7 +23,7 @@ class TestSGD:
     def test_default_params(self):
         opt, data = util.build_rosen('sgd')
         for _ in opt.iterate(data):
-            assert opt.nesterov == False
+            assert opt.nesterov is False
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.momentum, 0)
             assert np.allclose(opt.patience, 5)
@@ -42,7 +42,7 @@ class TestSGD:
                              max_gradient_elem=4,
                              max_gradient_norm=5,
                              nesterov=True):
-            assert opt.nesterov == True
+            assert opt.nesterov is True
             assert np.allclose(opt.learning_rate.eval(), 0.3)
             assert np.allclose(opt.momentum, 10)
             assert np.allclose(opt.patience, 20)
@@ -62,7 +62,7 @@ class TestNAG:
     def test_default_params(self):
         opt, data = util.build_rosen('nag')
         for _ in opt.iterate(data):
-            assert opt.nesterov == True
+            assert opt.nesterov is True
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.momentum, 0)
             assert np.allclose(opt.patience, 5)
@@ -81,7 +81,7 @@ class TestNAG:
                              max_gradient_elem=4,
                              max_gradient_norm=5,
                              nesterov=False):
-            assert opt.nesterov == True  # nesterov always True for NAG
+            assert opt.nesterov is True  # nesterov always True for NAG
             assert np.allclose(opt.learning_rate.eval(), 0.3)
             assert np.allclose(opt.momentum, 10)
             assert np.allclose(opt.patience, 20)

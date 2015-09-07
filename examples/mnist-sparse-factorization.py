@@ -1,4 +1,5 @@
 import climate
+import logging
 import numpy as np
 import theano
 import theano.tensor as TT
@@ -12,7 +13,6 @@ except ImportError:
 
 try:
     import skdata.mnist
-    #import skdata.cifar10
 except ImportError:
     logging.critical('please install skdata to run the examples!')
     raise
@@ -24,13 +24,12 @@ def load_mnist():
     '''Load the MNIST digits dataset.'''
     mnist = skdata.mnist.dataset.MNIST()
     mnist.meta  # trigger download if needed.
+
     def arr(n, dtype):
         arr = mnist.arrays[n]
         return arr.reshape((len(arr), -1)).astype(dtype)
     train_images = arr('train_images', np.float32) / 128 - 1
     train_labels = arr('train_labels', np.uint8)
-    test_images = arr('test_images', np.float32) / 128 - 1
-    test_labels = arr('test_labels', np.uint8)
     return ((train_images[:50000], train_labels[:50000, 0]),
             (train_images[50000:], train_labels[50000:, 0]))
 
