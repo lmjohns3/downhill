@@ -124,13 +124,19 @@ class Dataset:
         for i, x in enumerate(inputs):
             self._inputs.append(x)
             if isinstance(x, np.ndarray):
-                pass
-            elif isinstance(x, theano.compile.SharedVariable):
-                x = x.get_value(borrow=True)
-            else:
-                raise ValueError('input {} (index {}) must be a numpy array '
-                                 'or a theano shared variable'.format(i, x))
-            shapes.append(x.shape)
+                shapes.append(x.shape)
+                continue
+            if isinstance(x, theano.compile.SharedVariable):
+                shapes.append(x.get_value(borrow=True).shape)
+                continue
+            if 'pandas.' in str(type(x)):  # hacky but prevents a global import
+                import pandas as pd
+                if isinstance(x, (pd.Series, pd.DataFrame)):
+                    shapes.append(x.shape)
+                    continue
+            raise ValueError(
+                'input {} (type {}) must be numpy.array, theano.shared, '
+                'or pandas.{{Series,DataFrame}}'.format(i, type(x)))
 
         L = shapes[0][axis]
         assert all(L == s[axis] for s in shapes), \
@@ -152,11 +158,11 @@ class Dataset:
         if not self.iteration_size:
             self.iteration_size = len(self._slices)
 
-        logging.info('%s: %d of %d mini-batches of %s',
+        logging.info('%s: %d of %d mini-batches from %s',
                      self.name,
                      self.iteration_size,
                      len(self._slices),
-                     '; '.join(str(shape) for shape in shapes))
+                     '; '.join(str(s) for s in shapes))
 
     def __iter__(self):
         return self.iterate(True)
@@ -195,10 +201,11 @@ class Dataset:
                 yield self._next_batch(shuffle)
 
     def _next_batch(self, shuffle=True):
-        value = [x[i] for x, i in zip(self._inputs, self._slices[self._index])]
+        batch = [x.iloc[i] if hasattr(x, 'iloc') else x[i]
+                 for x, i in zip(self._inputs, self._slices[self._index])]
         self._index += 1
         if self._index >= len(self._slices):
             if shuffle:
                 self.shuffle()
             self._index = 0
-        return value
+        return batch

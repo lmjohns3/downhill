@@ -95,6 +95,18 @@ class TestDataset:
         f = list(ds)[0][0]
         assert isinstance(f, TT.TensorVariable), type(f)
 
+    def test_pandas(self):
+        import pandas as pd
+        x = pd.DataFrame(np.random.randn(40, 2))
+        ds = downhill.Dataset([x], batch_size=10, rng=4)
+        assert len(ds._slices) == 4
+        assert_size(ds, 0, 10)
+        assert_size(ds, 1, 10)
+        assert_size(ds, 2, 10)
+        assert_size(ds, 3, 10)
+        f = list(ds)[0][0]
+        assert isinstance(f, pd.DataFrame), type(f)
+
     def test_bad_input_type(self):
         try:
             downhill.Dataset([[1]])
