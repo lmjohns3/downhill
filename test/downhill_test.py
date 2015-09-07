@@ -6,8 +6,8 @@ import theano
 class TestMinimize:
     def test_minimize(self):
         x = theano.shared(-3 + np.zeros((2, ), 'f'), name='x')
-        data = downhill.Dataset(np.zeros((1, 1)), batch_size=1)
-        data._batches = [[]]
+        data = downhill.Dataset(np.zeros((1, 1), 'f'), batch_size=1)
+        data._slices = [[]]
         downhill.minimize(
             (100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2).sum(),
             data,

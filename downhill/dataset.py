@@ -10,6 +10,7 @@ estimated using a set of data that we have measured.
 import climate
 import collections
 import numpy as np
+import theano
 
 logging = climate.get_logger(__name__)
 
@@ -85,8 +86,8 @@ class Dataset:
 
     _count = 0
 
-    def __init__(self, inputs, name=None, batch_size=32, iteration_size=None, axis=0, rng=None):
-        '''Create a minibatch dataset from data arrays or a callable.'''
+    def __init__(self, inputs, name=None, batch_size=32, iteration_size=None,
+                 axis=0, rng=None):
         self.name = name or 'dataset{}'.format(Dataset._count)
         Dataset._count += 1
         self.batch_size = batch_size
@@ -95,7 +96,8 @@ class Dataset:
         if rng is None or isinstance(rng, int):
             self.rng = np.random.RandomState(rng)
 
-        self._batches = None
+        self._inputs = None
+        self._slices = None
         self._callable = None
 
         if isinstance(inputs, collections.Callable):
@@ -108,7 +110,7 @@ class Dataset:
         if not self.iteration_size:
             try:
                 self.iteration_size = len(inputs)
-            except (TypeError, AttributeError) as e:  # has no len
+            except (TypeError, AttributeError):  # has no len
                 self.iteration_size = 100
         logging.info('%s: %d mini-batches from callable',
                      self.name, self.iteration_size)
@@ -117,31 +119,44 @@ class Dataset:
         if not isinstance(inputs, (tuple, list)):
             inputs = (inputs, )
 
-        L = inputs[0].shape[axis]
-        assert all(L == x.shape[axis] for x in inputs), \
+        shapes = []
+        self._inputs = []
+        for i, x in enumerate(inputs):
+            self._inputs.append(x)
+            if isinstance(x, np.ndarray):
+                pass
+            elif isinstance(x, theano.compile.SharedVariable):
+                x = x.get_value(borrow=True)
+            else:
+                raise ValueError('input {} (index {}) must be a numpy array '
+                                 'or a theano shared variable'.format(i, x))
+            shapes.append(x.shape)
+
+        L = shapes[0][axis]
+        assert all(L == s[axis] for s in shapes), \
             'shapes do not match along axis {}: {}'.format(
-                axis, '; '.join(str(x.shape) for x in inputs))
+                axis, '; '.join(str(s) for s in shapes))
 
         self._index = 0
-        self._batches = []
+        self._slices = []
         for i in range(0, L, self.batch_size):
-            batch = []
-            for x in inputs:
-                slices = [slice(None) for _ in x.shape]
+            where = []
+            for shape in shapes:
+                slices = [slice(None) for _ in shape]
                 slices[axis] = slice(i, min(L, i + self.batch_size))
-                batch.append(x[tuple(slices)])
-            self._batches.append(batch)
+                where.append(tuple(slices))
+            self._slices.append(where)
 
         self.shuffle()
 
         if not self.iteration_size:
-            self.iteration_size = len(self._batches)
+            self.iteration_size = len(self._slices)
 
         logging.info('%s: %d of %d mini-batches of %s',
                      self.name,
                      self.iteration_size,
-                     len(self._batches),
-                     '; '.join(str(x.shape) for x in self._batches[0]))
+                     len(self._slices),
+                     '; '.join(str(shape) for shape in shapes))
 
     def __iter__(self):
         return self.iterate(True)
@@ -152,8 +167,8 @@ class Dataset:
         If this dataset was constructed using a callable, this method has no
         effect.
         '''
-        if self._batches is not None:
-            self.rng.shuffle(self._batches)
+        if self._slices is not None:
+            self.rng.shuffle(self._slices)
 
     def iterate(self, shuffle=True):
         '''Iterate over batches in the dataset.
@@ -180,9 +195,9 @@ class Dataset:
                 yield self._next_batch(shuffle)
 
     def _next_batch(self, shuffle=True):
-        value = self._batches[self._index]
+        value = [x[i] for x, i in zip(self._inputs, self._slices[self._index])]
         self._index += 1
-        if self._index >= len(self._batches):
+        if self._index >= len(self._slices):
             if shuffle:
                 self.shuffle()
             self._index = 0
