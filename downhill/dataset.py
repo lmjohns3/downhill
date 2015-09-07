@@ -134,6 +134,11 @@ class Dataset:
                 if isinstance(x, (pd.Series, pd.DataFrame)):
                     shapes.append(x.shape)
                     continue
+            if 'scipy.sparse.' in str(type(x)):  # same here
+                import scipy.sparse as ss
+                if isinstance(x, (ss.csr.csr_matrix, ss.csc.csc_matrix)):
+                    shapes.append(x.shape)
+                    continue
             raise ValueError(
                 'input {} (type {}) must be numpy.array, theano.shared, '
                 'or pandas.{{Series,DataFrame}}'.format(i, type(x)))

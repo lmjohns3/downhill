@@ -107,6 +107,30 @@ class TestDataset:
         f = list(ds)[0][0]
         assert isinstance(f, pd.DataFrame), type(f)
 
+    def test_sparse_csc(self):
+        import scipy.sparse as ss
+        x = ss.csc_matrix(np.random.randn(40, 2))
+        ds = downhill.Dataset([x], batch_size=10, rng=4)
+        assert len(ds._slices) == 4
+        assert_size(ds, 0, 10)
+        assert_size(ds, 1, 10)
+        assert_size(ds, 2, 10)
+        assert_size(ds, 3, 10)
+        f = list(ds)[0][0]
+        assert isinstance(f, ss.csc.csc_matrix), type(f)
+
+    def test_sparse_csr(self):
+        import scipy.sparse as ss
+        x = ss.csr_matrix(np.random.randn(40, 2))
+        ds = downhill.Dataset([x], batch_size=10, rng=4)
+        assert len(ds._slices) == 4
+        assert_size(ds, 0, 10)
+        assert_size(ds, 1, 10)
+        assert_size(ds, 2, 10)
+        assert_size(ds, 3, 10)
+        f = list(ds)[0][0]
+        assert isinstance(f, ss.csr.csr_matrix), type(f)
+
     def test_bad_input_type(self):
         try:
             downhill.Dataset([[1]])
