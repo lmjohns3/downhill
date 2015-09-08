@@ -45,19 +45,20 @@ class Dataset:
 
     Parameters
     ----------
-    inputs : ndarray, tuple, list, or callable
+    inputs : callable or list of ndarray/sparse matrix/DataFrame/theano shared var
         One or more sets of data.
 
         If this parameter is callable, then mini-batches will be obtained by
         calling the callable with no arguments; the callable is expected to
-        return a tuple of ndarrays that will be suitable for optimizing the
-        loss at hand.
+        return a tuple of ndarray-like objects that will be suitable for
+        optimizing the loss at hand.
 
-        If this parameter is a list or tuple, it must contain ndarrays (or
-        something similar with a ``shape`` attribute, like a pandas DataFrame).
-        These are assumed to contain data for computing the loss; the length of
-        this tuple or list should match the number of inputs required by the
-        loss computation. If multiple ndarrays are provided, their lengths along
+        If this parameter is a list (or a tuple), it must contain array-like
+        objects: ``numpy.ndarray``, ``scipy.sparse.csc_matrix``,
+        ``scipy.sparse.csr_matrix``, ``pandas.DataFrame`` or ``theano.shared``.
+        These are assumed to contain data for computing the loss, so the length
+        of this tuple or list should match the number of inputs required by the
+        loss computation. If multiple arrays are provided, their lengths along
         the axis given by the ``axis`` parameter (defaults to 0) must match.
 
     name : str, optional
@@ -66,7 +67,7 @@ class Dataset:
 
     batch_size : int, optional
         The size of the mini-batches to create from the data sequences. Defaults
-        to 32.
+        to 32. This parameter has no effect if ``inputs`` is callable.
 
     iteration_size : int, optional
         The number of batches to yield for each call to iterate(). Defaults to
