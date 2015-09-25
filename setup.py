@@ -8,7 +8,8 @@ setuptools.setup(
     author='Leif Johnson',
     author_email='leif@lmjohns3.com',
     description='Stochastic optimization routines for Theano',
-    long_description=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'README.rst')).read(),
+    long_description=open(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'README.rst')).read(),
     license='MIT',
     url='http://github.com/lmjohns3/downhill',
     keywords=('adadelta '
