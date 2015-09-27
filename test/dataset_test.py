@@ -37,6 +37,11 @@ class TestDataset:
         assert_size(ds, 2, 7)
         assert_size(ds, 3, 11)
 
+    def test_batch_size_zero(self):
+        ds = downhill.Dataset([np.random.randn(40, 2)], batch_size=0, rng=4)
+        assert len(ds._slices) == 1
+        assert_size(ds, 0, 40)
+
     def test_iteration_size(self):
         def batches_unchanged(previous):
             return all(a == b for a, b in zip(ds._slices, previous))

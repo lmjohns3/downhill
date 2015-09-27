@@ -66,8 +66,9 @@ class Dataset:
         'test' or 'train'.
 
     batch_size : int, optional
-        The size of the mini-batches to create from the data sequences. Defaults
-        to 32. This parameter has no effect if ``inputs`` is callable.
+        The size of the mini-batches to create from the data sequences. If this
+        is negative or zero, all data in the dataset will be used in one batch.
+        Defaults to 32. This parameter has no effect if ``inputs`` is callable.
 
     iteration_size : int, optional
         The number of batches to yield for each call to iterate(). Defaults to
@@ -149,13 +150,15 @@ class Dataset:
             'shapes do not match along axis {}: {}'.format(
                 axis, '; '.join(str(s) for s in shapes))
 
+        B = L if self.batch_size <= 0 else self.batch_size
+
         self._index = 0
         self._slices = []
-        for i in range(0, L, self.batch_size):
+        for i in range(0, L, B):
             where = []
             for shape in shapes:
                 slices = [slice(None) for _ in shape]
-                slices[axis] = slice(i, min(L, i + self.batch_size))
+                slices[axis] = slice(i, min(L, i + B))
                 where.append(tuple(slices))
             self._slices.append(where)
 
