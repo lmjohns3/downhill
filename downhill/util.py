@@ -42,7 +42,8 @@ def shared_like(param, suffix, init=0):
         A new shared variable with the same shape and data type as ``param``.
     '''
     return theano.shared(np.zeros_like(param.get_value()) + init,
-                         name='{}_{}'.format(param.name, suffix))
+                         name='{}_{}'.format(param.name, suffix),
+                         broadcastable=param.broadcastable)
 
 
 def as_float(x):
