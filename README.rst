@@ -1,6 +1,8 @@
 .. image:: https://travis-ci.org/lmjohns3/downhill.svg
 .. image:: https://coveralls.io/repos/lmjohns3/downhill/badge.svg
    :target: https://coveralls.io/r/lmjohns3/downhill
+.. image:: http://depsy.org/api/package/pypi/downhill/badge.svg
+   :target: http://depsy.org/package/python/downhill
 
 ============
 ``DOWNHILL``
