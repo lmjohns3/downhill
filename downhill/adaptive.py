@@ -182,7 +182,7 @@ class RMSProp(Optimizer):
 
     .. math::
         \begin{eqnarray*}
-        f_{t+1} &=& \gamma a_t + (1 - \gamma) \frac{\partial\mathcal{L}}{\partial p} \\
+        f_{t+1} &=& \gamma f_t + (1 - \gamma) \frac{\partial\mathcal{L}}{\partial p} \\
         g_{t+1} &=& \gamma g_t + (1 - \gamma) \left(
            \frac{\partial\mathcal{L}}{\partial p}\right)^2 \\
         p_{t+1} &=& p_t - \frac{\alpha}{\sqrt{g_{t+1} - f_{t+1}^2 + \epsilon}}
