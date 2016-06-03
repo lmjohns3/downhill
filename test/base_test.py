@@ -28,15 +28,15 @@ class TestBuild:
         assert isinstance(util.build_rosen('Adam')[0], downhill.Adam)
 
 
-class Tester(downhill.Optimizer):
+class Straight(downhill.Optimizer):
     def _get_updates_for(self, param, grad):
         yield (param, param + 1.1)
 
 
 class TestOptimizer:
     def test_rosen(self):
-        opt, train = util.build_rosen('tester')
-        assert isinstance(opt, Tester)
+        opt, train = util.build_rosen('straight')
+        assert isinstance(opt, Straight)
 
         # run the optimizer for three iterations. check that the x and y values
         # (being monitored) increase at each iteration.
@@ -46,8 +46,8 @@ class TestOptimizer:
             assert i < 3
 
     def test_rosen_unnamed(self):
-        opt, train = util.build_rosen('tester', name=False, monitor_gradients=True)
-        assert isinstance(opt, Tester)
+        opt, train = util.build_rosen('straight', name=False, monitor_gradients=True)
+        assert isinstance(opt, Straight)
 
         # run the optimizer for three iterations. check that the x and y values
         # (being monitored) increase at each iteration.
@@ -59,8 +59,8 @@ class TestOptimizer:
             assert i < 3
 
     def test_factor(self):
-        opt, train = util.build_factor('tester')
-        assert isinstance(opt, Tester)
+        opt, train = util.build_factor('straight')
+        assert isinstance(opt, Straight)
 
         # run the optimizer for two iterations. check that the u and v values
         # (being monitored) are reasonable at the start.
@@ -73,7 +73,7 @@ class TestOptimizer:
                 break
 
     def test_gradient_clip(self):
-        opt, data = util.build_rosen('tester')
+        opt, data = util.build_rosen('straight')
         for _ in opt.iterate(data, gradient_clip=1):
             assert opt.max_gradient_elem == 1
             break
@@ -85,12 +85,12 @@ class TestOptimizer:
             break
 
     def test_set_params(self):
-        opt, _ = util.build_rosen('tester')
+        opt, _ = util.build_rosen('straight')
         opt.set_params([[1, 2]])
         assert np.allclose(opt._params[0].get_value(), [1, 2])
 
     def test_set_best_params(self):
-        opt, _ = util.build_rosen('tester')
+        opt, _ = util.build_rosen('straight')
         opt._best_params = [[1, 2]]
         opt.set_params('best')
         assert np.allclose(opt._params[0].get_value(), [1, 2])
