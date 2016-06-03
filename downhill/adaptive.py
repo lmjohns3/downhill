@@ -21,6 +21,24 @@ __all__ = ['RProp', 'RMSProp', 'ADAGRAD', 'ADADELTA', 'ESGD', 'Adam']
 class RProp(Optimizer):
     r'''Resilient backpropagation optimizer.
 
+    Parameters
+    ----------
+    rprop_increase: float, optional (default 1.01)
+        Increase step sizes at this rate when the gradient sign stays the same.
+    rprop_decrease: float, optional (default 0.99)
+        Decrease step sizes at this rate when the gradient sign changes.
+    rprop_min_step: float, optional (default 0)
+        Minimum step size for any parameter.
+    rprop_max_step: float, optional (default 100)
+        Maximum step size for any parameter.
+    momentum: float, optional (default 0)
+        Momentum to apply to the updates, if any. Defaults to 0 (no momentum).
+        Set to a value close to 1 (e.g., 1 - 1e-4) for large amounts of
+        momentum.
+    nesterov: bool, optional (default False)
+        Set this to ``True`` to enable Nesterov-style momentum updates, whenever
+        ``momentum`` is nonzero.
+
     Notes
     -----
 
@@ -110,6 +128,18 @@ class RProp(Optimizer):
 class ADAGRAD(Optimizer):
     r'''ADAGRAD optimizer.
 
+    Parameters
+    ----------
+    rms_regularizer: float, optional (default 1e-8)
+        Regularize the learning rate scaling factor by this :math:`\epsilon`.
+    momentum: float, optional (default 0)
+        Momentum to apply to the updates, if any. Defaults to 0 (no momentum).
+        Set to a value close to 1 (e.g., 1 - 1e-4) for large amounts of
+        momentum.
+    nesterov: bool, optional (default False)
+        Set this to ``True`` to enable Nesterov-style momentum updates, whenever
+        ``momentum`` is nonzero.
+
     Notes
     -----
 
@@ -137,7 +167,8 @@ class ADAGRAD(Optimizer):
     learning rate overall as training progresses.
 
     In this implementation, the scale values are regularized (made less extreme)
-    by :math:`\epsilon`, which is specified using the ``regularizer`` parameter.
+    by :math:`\epsilon`, which is specified using the ``rms_regularizer``
+    parameter.
 
     References
     ----------
@@ -147,13 +178,13 @@ class ADAGRAD(Optimizer):
        on Learning Theory (COLT).
     '''
 
-    def _prepare(self, regularizer=1e-8, **kwargs):
-        self.epsilon = as_float(regularizer)
-        logging.info('-- regularizer = %s', regularizer)
+    def _prepare(self, rms_regularizer=1e-8, **kwargs):
+        self.epsilon = as_float(rms_regularizer)
+        logging.info('-- rms_regularizer = %s', rms_regularizer)
         super(ADAGRAD, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
-        g2_tm1 = shared_like(param, 'g2_ewma')
+        g2_tm1 = shared_like(param, 'g2_acc')
         g2_t = g2_tm1 + grad * grad
         delta = grad * self.learning_rate / TT.sqrt(g2_t + self.epsilon)
         yield g2_tm1, g2_t
@@ -162,6 +193,23 @@ class ADAGRAD(Optimizer):
 
 class RMSProp(Optimizer):
     r'''RMSProp optimizer.
+
+    Parameters
+    ----------
+    learning_rate: float, optional (default 1e-4)
+        Step size to take during optimization.
+    rms_halflife: float, optional (default 14)
+        Compute RMS gradient values using an exponentially weighted moving
+        average that decays with this halflife.
+    rms_regularizer: float, optional (default 1e-8)
+        Regularize RMS gradient values by this :math:`\epsilon`.
+    momentum: float, optional (default 0)
+        Momentum to apply to the updates, if any. Defaults to 0 (no momentum).
+        Set to a value close to 1 (e.g., 1 - 1e-4) for large amounts of
+        momentum.
+    nesterov: bool, optional (default False)
+        Set this to ``True`` to enable Nesterov-style momentum updates, whenever
+        ``momentum`` is nonzero.
 
     Notes
     -----
@@ -212,6 +260,7 @@ class RMSProp(Optimizer):
 
     .. [Grav13] A. Graves. (2013) "Generating Sequences With Recurrent Neural
        Networks." http://arxiv.org/abs/1308.0850
+
     '''
 
     def _prepare(self, rms_halflife=14, rms_regularizer=1e-8, **kwargs):
@@ -234,6 +283,21 @@ class RMSProp(Optimizer):
 
 class ADADELTA(RMSProp):
     r'''ADADELTA optimizer.
+
+    Parameters
+    ----------
+    rms_halflife: float, optional (default 14)
+        Compute RMS gradient values using an exponentially weighted moving
+        average that decays with this halflife.
+    rms_regularizer: float, optional (default 1e-8)
+        Regularize RMS gradient values by this :math:`\epsilon`.
+    momentum: float, optional (default 0)
+        Momentum to apply to the updates, if any. Defaults to 0 (no momentum).
+        Set to a value close to 1 (e.g., 1 - 1e-4) for large amounts of
+        momentum.
+    nesterov: bool, optional (default False)
+        Set this to ``True`` to enable Nesterov-style momentum updates, whenever
+        ``momentum`` is nonzero.
 
     Notes
     -----
@@ -293,6 +357,23 @@ class ADADELTA(RMSProp):
 
 class ESGD(RMSProp):
     r'''Equilibrated SGD computes a diagonal Hessian preconditioner.
+
+    Parameters
+    ----------
+    learning_rate: float, optional (default 1e-4)
+        Step size to take during optimization.
+    rms_halflife: float, optional (default 14)
+        Compute RMS gradient values using an exponentially weighted moving
+        average that decays with this halflife.
+    rms_regularizer: float, optional (default 1e-8)
+        Regularize RMS gradient values by this :math:`\epsilon`.
+    momentum: float, optional (default 0)
+        Momentum to apply to the updates, if any. Defaults to 0 (no momentum).
+        Set to a value close to 1 (e.g., 1 - 1e-4) for large amounts of
+        momentum.
+    nesterov: bool, optional (default False)
+        Set this to ``True`` to enable Nesterov-style momentum updates, whenever
+        ``momentum`` is nonzero.
 
     Notes
     -----
@@ -371,6 +452,28 @@ class ESGD(RMSProp):
 
 class Adam(RMSProp):
     r'''Adam optimizer using unbiased gradient moment estimates.
+
+    Parameters
+    ----------
+    learning_rate: float, optional (default 1e-4)
+        Step size to take during optimization.
+    beta1_decay: float, optional (default 1 - 1e-6)
+        Extend the :math:`\beta_1` halflife by this amount after every update.
+    beta1_halflife: float, optional (default 7)
+        Compute RMS gradient estimates using an exponentially weighted moving
+        average that decays with this halflife.
+    beta2_halflife: float, optional (default 69)
+        Compute squared-magnitude RMS gradient estimates using an exponentially
+        weighted moving average that decays with this halflife.
+    rms_regularizer: float, optional (default 1e-8)
+        Regularize RMS gradient values by this :math:`\epsilon`.
+    momentum: float, optional (default 0)
+        Momentum to apply to the updates, if any. Defaults to 0 (no momentum).
+        Set to a value close to 1 (e.g., 1 - 1e-4) for large amounts of
+        momentum.
+    nesterov: bool, optional (default False)
+        Set this to ``True`` to enable Nesterov-style momentum updates, whenever
+        ``momentum`` is nonzero.
 
     Notes
     -----

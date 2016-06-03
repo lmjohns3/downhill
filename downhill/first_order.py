@@ -14,6 +14,18 @@ __all__ = ['SGD', 'NAG']
 class SGD(Optimizer):
     r'''Basic optimization using stochastic gradient descent.
 
+    Parameters
+    ----------
+    learning_rate: float, optional (default 1e-4)
+        Step size to take during optimization.
+    momentum: float, optional (default 0)
+        Momentum to apply to the updates, if any. Defaults to 0 (no momentum).
+        Set to a value close to 1 (e.g., 1 - 1e-4) for large amounts of
+        momentum.
+    nesterov: bool, optional (default False)
+        Set this to ``True`` to enable Nesterov-style momentum updates, whenever
+        ``momentum`` is nonzero.
+
     Notes
     -----
 
@@ -57,6 +69,16 @@ class NAG(SGD):
     Note that the ``momentum`` parameter must be given during optimization for
     Nesterov momentum to be employed; by default ``momentum`` is 0 and so no
     momentum is used.
+
+    Parameters
+    ----------
+    learning_rate: float, optional (default 1e-4)
+        Step size to take during optimization.
+
+    momentum: float, optional (default 0)
+        Momentum to apply to the updates, if any. Defaults to 0 (no momentum).
+        Set to a value close to 1 (e.g., 1 - 1e-4) for large amounts of
+        momentum.
 
     Notes
     -----
