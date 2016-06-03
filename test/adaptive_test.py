@@ -79,7 +79,7 @@ class TestADAGRAD:
 
     def test_params(self):
         opt, data = util.build_rosen('adagrad')
-        for _ in opt.iterate(data, regularizer=0.1):
+        for _ in opt.iterate(data, rms_regularizer=0.1):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.epsilon.eval(), 0.1)
             break
