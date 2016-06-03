@@ -360,6 +360,9 @@ class ESGD(RMSProp):
 
     Parameters
     ----------
+    hv_method: {'rop', 'lop', 'grad'}, optional
+        The Hv (Hessian-vector) product will be computed using the given method.
+        The default is to use 'rop'.
     learning_rate: float, optional (default 1e-4)
         Step size to take during optimization.
     rms_halflife: float, optional (default 14)
@@ -439,11 +442,19 @@ class ESGD(RMSProp):
 
     def __init__(self, *args, **kwargs):
         self.rng = RandomStreams()
+        self.hv_method = kwargs.pop('hv_method', 'rop').lower()
+        assert self.hv_method in ('rop', 'lop', 'grad')
         super(ESGD, self).__init__(*args, **kwargs)
 
     def _get_updates_for(self, param, grad):
         D_tm1 = shared_like(param, 'D_ewma')
-        Hv = TT.Rop(grad, param, self.rng.normal(param.shape))
+        v = self.rng.normal(param.shape)
+        if self.hv_method == 'rop':
+            Hv = TT.Rop(grad, param, v)
+        if self.hv_method == 'lop':
+            Hv = TT.Lop(grad, param, v)
+        if self.hv_method == 'grad':
+            Hv = TT.grad(TT.sum(grad * v), param)
         D_t = self.ewma * D_tm1 + (1 - self.ewma) * Hv * Hv
         den = TT.sqrt(D_t) + self.epsilon
         yield D_tm1, D_t

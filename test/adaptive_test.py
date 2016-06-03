@@ -12,6 +12,7 @@ class TestESGD:
 
     def test_default_params(self):
         opt, data = util.build_rosen('esgd')
+        assert opt.hv_method == 'rop'
         for _ in opt.iterate(data):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
             assert np.allclose(opt.ewma.eval(), np.exp(-np.log(2) / 14))
@@ -20,6 +21,7 @@ class TestESGD:
 
     def test_params(self):
         opt, data = util.build_rosen('esgd')
+        opt.hv_method = 'lop'  # TODO(leif): incorporate into downhill.build()?
         for _ in opt.iterate(data,
                              learning_rate=0.3,
                              rms_halflife=10,
