@@ -246,7 +246,10 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             quantities of interest during optimization---for example, loss
             function, accuracy, or whatever the optimization task requires.
         '''
-        values = [self.f_eval(*x) for x in dataset]
+        if dataset is None:
+            values = [self.f_eval()]
+        else:
+            values = [self.f_eval(*x) for x in dataset]
         monitors = zip(self._monitor_names, np.mean(values, axis=0))
         return collections.OrderedDict(monitors)
 
@@ -286,7 +289,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         pass
 
     def iterate(self,
-                train,
+                train=None,
                 valid=None,
                 patience=5,
                 validate_every=10,
@@ -457,6 +460,9 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         train_monitors : dict
             A dictionary mapping monitor names to values.
         '''
-        values = [self.f_step(*x) for x in dataset]
+        if dataset is None:
+            values = [self.f_step()]
+        else:
+            values = [self.f_step(*x) for x in dataset]
         return collections.OrderedDict(
             zip(self._monitor_names, np.mean(values, axis=0)))

@@ -11,7 +11,7 @@ def build_rosen(algo, name=True, monitor_gradients=False):
         loss=(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2).sum(),
         monitors=[('x', x[:-1].sum()), ('y', x[1:].sum())],
         monitor_gradients=monitor_gradients,
-    ), [[]]
+    ), None
 
 
 def build_factor(algo):

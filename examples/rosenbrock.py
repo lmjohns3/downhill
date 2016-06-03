@@ -30,7 +30,6 @@ def build(algo, init):
         algo,
         loss=(n + 100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2).sum(),
         params=[x],
-        inputs=[],
         monitors=monitors,
         monitor_gradients=True)
 
