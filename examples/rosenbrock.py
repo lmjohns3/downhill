@@ -76,8 +76,8 @@ def test(algos, n=10, init=[-1.1, 0], limit=100):
     '''
     for algo in algos:
         for _ in range(n):
-            mu = max(0, np.random.uniform(0, 1.2) - 0.2)
-            rate = np.exp(np.random.uniform(-8, 0))
+            mu = max(0, np.random.uniform(0, 2) - 1)
+            rate = np.exp(np.random.uniform(-8, -1))
             half = int(np.exp(np.random.uniform(0, 4)))
             reg = np.exp(np.random.uniform(-12, 0))
             yield (algo, rate, mu, half, reg), build_and_trace(
