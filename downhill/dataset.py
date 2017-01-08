@@ -7,12 +7,10 @@ respect to estimates of a loss function. The loss function for many problems is
 estimated using a set of data that we have measured.
 '''
 
-import climate
+import click
 import collections
 import numpy as np
 import theano
-
-logging = climate.get_logger(__name__)
 
 
 class Dataset:
@@ -114,8 +112,8 @@ class Dataset:
                 self.iteration_size = len(inputs)
             except (TypeError, AttributeError):  # has no len
                 self.iteration_size = 100
-        logging.info('%s: %d mini-batches from callable',
-                     self.name, self.iteration_size)
+        click.echo('{}: {} mini-batches from callable'.format(
+            self.name, self.iteration_size))
 
     def _init_arrays(self, inputs, axis=0):
         if not isinstance(inputs, (tuple, list)):
@@ -167,11 +165,9 @@ class Dataset:
         if not self.iteration_size:
             self.iteration_size = len(self._slices)
 
-        logging.info('%s: %d of %d mini-batches from %s',
-                     self.name,
-                     self.iteration_size,
-                     len(self._slices),
-                     '; '.join(str(s) for s in shapes))
+        click.echo('{}: {} of {} mini-batches from {}'.format(
+            self.name, self.iteration_size, len(self._slices),
+            '; '.join(str(s) for s in shapes)))
 
     def __iter__(self):
         return self.iterate(True)

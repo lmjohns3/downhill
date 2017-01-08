@@ -3,7 +3,7 @@
 '''This module defines gradient descent optimizers with adaptive learning rates.
 '''
 
-import climate
+import click
 import numpy as np
 import theano
 import theano.tensor as TT
@@ -12,8 +12,6 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 
 from .base import Optimizer
 from .util import as_float, shared_like
-
-logging = climate.get_logger(__name__)
 
 __all__ = ['RProp', 'RMSProp', 'ADAGRAD', 'ADADELTA', 'ESGD', 'Adam']
 
@@ -104,10 +102,10 @@ class RProp(Optimizer):
         self.step_decrease = as_float(rprop_decrease)
         self.min_step = as_float(rprop_min_step)
         self.max_step = as_float(rprop_max_step)
-        logging.info('-- rprop_increase = %s', rprop_increase)
-        logging.info('-- rprop_decrease = %s', rprop_decrease)
-        logging.info('-- rprop_min_step = %s', rprop_min_step)
-        logging.info('-- rprop_max_step = %s', rprop_max_step)
+        click.echo('-- rprop_increase = {}'.format(rprop_increase))
+        click.echo('-- rprop_decrease = {}'.format(rprop_decrease))
+        click.echo('-- rprop_min_step = {}'.format(rprop_min_step))
+        click.echo('-- rprop_max_step = {}'.format(rprop_max_step))
         super(RProp, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
@@ -180,7 +178,7 @@ class ADAGRAD(Optimizer):
 
     def _prepare(self, rms_regularizer=1e-8, **kwargs):
         self.epsilon = as_float(rms_regularizer)
-        logging.info('-- rms_regularizer = %s', rms_regularizer)
+        click.echo('-- rms_regularizer = {}'.format(rms_regularizer))
         super(ADAGRAD, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
@@ -266,8 +264,8 @@ class RMSProp(Optimizer):
     def _prepare(self, rms_halflife=14, rms_regularizer=1e-8, **kwargs):
         self.ewma = as_float(np.exp(-np.log(2) / rms_halflife))
         self.epsilon = as_float(rms_regularizer)
-        logging.info('-- rms_halflife = %s', rms_halflife)
-        logging.info('-- rms_regularizer = %s', rms_regularizer)
+        click.echo('-- rms_halflife = {}'.format(rms_halflife))
+        click.echo('-- rms_regularizer = {}'.format(rms_regularizer))
         super(RMSProp, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):

@@ -2,7 +2,7 @@
 
 '''This module defines a base class for optimization techniques.'''
 
-import climate
+import click
 import collections
 import numpy as np
 import theano
@@ -10,8 +10,6 @@ import theano.tensor as TT
 import warnings
 
 from . import util
-
-logging = climate.get_logger(__name__)
 
 
 def build(algo, loss, params=None, inputs=None, updates=(), monitors=(),
@@ -108,21 +106,21 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 if not name:
                     name = 'unnamed{}'.format(unnamed)
                     unnamed += 1
-                    logging.warn('%s unnamed, will be "%s" internally', p, name)
+                    click.echo('"{}" unnamed, will be "{}" internally'.format(p, name))
                 self._monitor_names.append('grad({})'.format(name))
                 self._monitor_exprs.append((g * g).sum())
 
     def _compile(self):
         '''Compile the Theano functions for evaluating and updating our model.
         '''
-        logging.info('compiling evaluation function')
+        click.echo('compiling evaluation function')
         self.f_eval = theano.function(self._inputs,
                                       self._monitor_exprs,
                                       updates=self._updates,
                                       name='evaluation')
         label = self.__class__.__name__
-        logging.info('compiling %s function', label)
         updates = list(self._updates) + list(self._get_updates())
+        click.echo('compiling {} optimizer'.format(label))
         self.f_step = theano.function(self._inputs,
                                       self._monitor_exprs,
                                       updates=updates,
@@ -212,7 +210,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             param.set_value(target)
 
     def _log(self, monitors, iteration, label='', suffix=''):
-        '''Log the state of the optimizer through the logging system.
+        '''Log the state of the optimizer on the console.
 
         Parameters
         ----------
@@ -229,7 +227,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         '''
         label = label or self.__class__.__name__
         fields = (('{}={:.6f}').format(k, v) for k, v in monitors.items())
-        logging.info('%s %i %s%s', label, iteration, ' '.join(fields), suffix)
+        click.echo('{} {} {}{}'.format(label, iteration, ' '.join(fields), suffix))
 
     def evaluate(self, dataset):
         '''Evaluate the current model parameters on a dataset.
@@ -389,15 +387,15 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         self.learning_rate = util.as_float(learning_rate)
         self.momentum = momentum
         self.nesterov = nesterov
-        logging.info('-- patience = %s', patience)
-        logging.info('-- validate_every = %s', validate_every)
-        logging.info('-- max_updates = %s', max_updates)
-        logging.info('-- min_improvement = %s', min_improvement)
-        logging.info('-- max_gradient_norm = %s', max_gradient_norm)
-        logging.info('-- max_gradient_elem = %s', max_gradient_elem)
-        logging.info('-- learning_rate = %s', learning_rate)
-        logging.info('-- momentum = %s', momentum)
-        logging.info('-- nesterov = %s', nesterov)
+        click.echo('-- patience = {}'.format(patience))
+        click.echo('-- validate_every = {}'.format(validate_every))
+        click.echo('-- max_updates = {}'.format(max_updates))
+        click.echo('-- min_improvement = {}'.format(min_improvement))
+        click.echo('-- max_gradient_norm = {}'.format(max_gradient_norm))
+        click.echo('-- max_gradient_elem = {}'.format(max_gradient_elem))
+        click.echo('-- learning_rate = {}'.format(learning_rate))
+        click.echo('-- momentum = {}'.format(momentum))
+        click.echo('-- nesterov = {}'.format(nesterov))
 
         self._prepare(**kwargs)
         self._compile()
@@ -411,15 +409,15 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 try:
                     validation = self.evaluate(valid)
                 except KeyboardInterrupt:
-                    logging.info('interrupted!')
+                    click.echo('interrupted!')
                     break
                 if self._test_patience(validation):
-                    logging.info('patience elapsed!')
+                    click.echo('patience elapsed!')
                     break
             try:
                 training = self._step(train)
             except KeyboardInterrupt:
-                logging.info('interrupted!')
+                click.echo('interrupted!')
                 break
             iteration += 1
             self._log(training, iteration)

@@ -22,7 +22,7 @@ setuptools.setup(
               'sgd '
               'theano '
               ),
-    install_requires=['theano', 'climate'],
+    install_requires=['theano', 'click'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',

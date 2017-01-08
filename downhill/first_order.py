@@ -2,11 +2,7 @@
 
 '''This module defines first-order gradient descent optimizers.'''
 
-import climate
-
 from .base import Optimizer
-
-logging = climate.get_logger(__name__)
 
 __all__ = ['SGD', 'NAG']
 
