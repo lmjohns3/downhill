@@ -54,7 +54,10 @@ single call to ``downhill.minimize``:
   import theano
   import theano.tensor as TT
 
-  def rand(a, b): return np.random.randn(a, b).astype('f')
+  FLOAT = 'df'[theano.config.floatX == 'float32']
+
+  def rand(a, b):
+      return np.random.randn(a, b).astype(FLOAT)
 
   A, B, K = 20, 5, 3
 

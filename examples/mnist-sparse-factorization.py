@@ -5,6 +5,8 @@ import skdata.mnist
 import theano
 import theano.tensor as TT
 
+FLOAT = 'df'[theano.config.floatX == 'float32']
+
 
 def load_mnist():
     '''Load the MNIST digits dataset.'''
@@ -63,8 +65,8 @@ B = 784
 
 x = TT.matrix('x')
 
-u = theano.shared(np.random.randn(N * N, K * K).astype('f'), name='u')
-v = theano.shared(np.random.randn(K * K, B).astype('f'), name='v')
+u = theano.shared(np.random.randn(N * N, K * K).astype(FLOAT), name='u')
+v = theano.shared(np.random.randn(K * K, B).astype(FLOAT), name='v')
 
 err = TT.sqr(x - TT.dot(u, v)).mean()
 

@@ -9,6 +9,8 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 COLORS = ('#d62728 #1f77b4 #2ca02c #9467bd #ff7f0e '
           '#e377c2 #8c564b #bcbd22 #7f7f7f #17becf').split()
 
+FLOAT = 'df'[theano.config.floatX == 'float32']
+
 
 def build(algo, init):
     '''Build and return an optimizer for the rosenbrock function.
@@ -17,7 +19,7 @@ def build(algo, init):
     function. This function requires several Theano quantities such as the loss
     being optimized and the parameters to update during optimization.
     '''
-    x = theano.shared(np.array(init, 'f'), name='x')
+    x = theano.shared(np.array(init, FLOAT), name='x')
     n = 0.1 * RandomStreams().normal((len(init) - 1, ))
     monitors = []
     if len(init) == 2:
