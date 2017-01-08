@@ -55,7 +55,7 @@ class SGD(Optimizer):
     '''
 
     def _get_updates_for(self, param, grad):
-        yield param, param - self.learning_rate * grad
+        yield param, self.learning_rate * grad
 
 
 class NAG(SGD):

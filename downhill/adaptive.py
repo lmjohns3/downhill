@@ -118,7 +118,7 @@ class RProp(Optimizer):
                             diff * self.step_decrease)
         step = TT.minimum(self.max_step, TT.maximum(self.min_step, steps))
         grad = grad - diff * grad
-        yield param, param - TT.sgn(grad) * step
+        yield param, TT.sgn(grad) * step
         yield grad_tm1, grad
         yield step_tm1, step
 
@@ -184,9 +184,8 @@ class ADAGRAD(Optimizer):
     def _get_updates_for(self, param, grad):
         g2_tm1 = shared_like(param, 'g2_acc')
         g2_t = g2_tm1 + grad * grad
-        delta = grad * self.learning_rate / TT.sqrt(g2_t + self.epsilon)
         yield g2_tm1, g2_t
-        yield param, param - delta
+        yield param, grad * self.learning_rate / TT.sqrt(g2_t + self.epsilon)
 
 
 class RMSProp(Optimizer):
@@ -276,7 +275,7 @@ class RMSProp(Optimizer):
         rms = TT.sqrt(g2_t - g1_t * g1_t + self.epsilon)
         yield g1_tm1, g1_t
         yield g2_tm1, g2_t
-        yield param, param - self.learning_rate * grad / rms
+        yield param, self.learning_rate * grad / rms
 
 
 class ADADELTA(RMSProp):
@@ -350,7 +349,7 @@ class ADADELTA(RMSProp):
         x2_t = self.ewma * x2_tm1 + (1 - self.ewma) * delta * delta
         yield g2_tm1, g2_t
         yield x2_tm1, x2_t
-        yield param, param - delta
+        yield param, delta
 
 
 class ESGD(RMSProp):
@@ -454,9 +453,9 @@ class ESGD(RMSProp):
         if self.hv_method == 'grad':
             Hv = TT.grad(TT.sum(grad * v), param)
         D_t = self.ewma * D_tm1 + (1 - self.ewma) * Hv * Hv
-        den = TT.sqrt(D_t) + self.epsilon
+        denom = TT.sqrt(D_t) + self.epsilon
         yield D_tm1, D_t
-        yield param, param - grad * self.learning_rate / den
+        yield param, grad * self.learning_rate / denom
 
 
 class Adam(RMSProp):
@@ -550,9 +549,9 @@ class Adam(RMSProp):
         beta1 = self.beta1 * self.beta1_decay ** t_tm1
         g1_t = beta1 * g1_tm1 + (1 - beta1) * grad
         g2_t = self.beta2 * g2_tm1 + (1 - self.beta2) * grad * grad
-        num = g1_t / (1 - beta1)
-        den = TT.sqrt(g2_t / (1 - self.beta2))
+        numer = g1_t / (1 - beta1)
+        denom = TT.sqrt(g2_t / (1 - self.beta2))
         yield t_tm1, t_tm1 + 1
         yield g1_tm1, g1_t
         yield g2_tm1, g2_t
-        yield param, param - self.learning_rate * num / (den + self.epsilon)
+        yield param, self.learning_rate * numer / (denom + self.epsilon)
