@@ -1,23 +1,9 @@
-import climate
-import logging
+import downhill
+import matplotlib.pyplot as plt
 import numpy as np
+import skdata.mnist
 import theano
 import theano.tensor as TT
-import downhill
-
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    logging.critical('please install matplotlib to run the examples!')
-    raise
-
-try:
-    import skdata.mnist
-except ImportError:
-    logging.critical('please install skdata to run the examples!')
-    raise
-
-climate.enable_default_logging()
 
 
 def load_mnist():

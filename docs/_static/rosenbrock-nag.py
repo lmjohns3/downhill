@@ -1,11 +1,8 @@
-import climate
 import downhill
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import theano
-
-climate.enable_default_logging()
 
 x = theano.shared(np.array([-1, 0], 'f'), name='x')
 

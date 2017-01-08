@@ -49,13 +49,10 @@ single call to ``downhill.minimize``:
 
 .. code:: python
 
-  import climate
   import downhill
   import numpy as np
   import theano
   import theano.tensor as TT
-
-  climate.enable_default_logging()
 
   def rand(a, b): return np.random.randn(a, b).astype('f')
 

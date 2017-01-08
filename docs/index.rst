@@ -46,13 +46,10 @@ This is pretty straightforward to model using Theano. Once you set up the
 appropriate variables and an expression for the loss, you can optimize the loss
 with respect to the variables using a single call to :func:`downhill.minimize`::
 
-  import climate
   import downhill
   import numpy as np
   import theano
   import theano.tensor as TT
-
-  climate.enable_default_logging()
 
   def rand(a, b): return np.random.randn(a, b).astype('f')
 

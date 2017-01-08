@@ -1,13 +1,10 @@
 '''Helper functions for rosenbrock optimization examples.'''
 
-import climate
 import downhill
 import numpy as np
 import theano
 
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
-
-climate.enable_default_logging()
 
 COLORS = ('#d62728 #1f77b4 #2ca02c #9467bd #ff7f0e '
           '#e377c2 #8c564b #bcbd22 #7f7f7f #17becf').split()
