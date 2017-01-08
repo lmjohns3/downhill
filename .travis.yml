@@ -3,7 +3,7 @@ sudo: false
 language: python
 python:
   - "2.7"
-  - "3.3"
+  - "3.4"
 addons:
   apt:
     packages:
@@ -17,8 +17,8 @@ before_install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda update --yes conda
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy pandas
-  - pip install pytest-pep8 pytest-cov python-coveralls
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy
+  - pip install pytest-pep8 pytest-cov python-coveralls pandas
   - python setup.py develop
 script:
   - THEANO_FLAGS=floatX=float32 py.test -v --pep8 --cov=downhill --cov-report=term-missing
