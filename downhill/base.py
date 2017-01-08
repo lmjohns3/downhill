@@ -119,14 +119,14 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                                       updates=self._updates,
                                       name='evaluation')
         label = self.__class__.__name__
-        updates = list(self._updates) + list(self._get_updates())
         click.echo('compiling {} optimizer'.format(label))
+        updates = list(self._updates) + list(self.get_updates())
         self.f_step = theano.function(self._inputs,
                                       self._monitor_exprs,
                                       updates=updates,
                                       name=label)
 
-    def _get_updates(self):
+    def get_updates(self):
         '''Get parameter update expressions for performing optimization.
 
         Yields
