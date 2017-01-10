@@ -2,6 +2,7 @@
 
 '''A module of utility functions and other goodies.'''
 
+import click
 import numpy as np
 import theano
 import theano.tensor as TT
@@ -90,3 +91,28 @@ def find_inputs_and_params(node):
             elif not isinstance(node, TT.Constant):
                 inputs.add(node)
     return list(inputs), list(params)
+
+
+def log(msg):
+    '''Log a message to the console.
+
+    Parameters
+    ----------
+    msg : any
+        A string to log to the console
+    '''
+    click.echo('{}: {}'.format(click.style('downhill', fg='cyan'), msg))
+
+
+def log_param(name, value):
+    '''Log a parameter value to the console.
+
+    Parameters
+    ----------
+    name : str
+        Name of the parameter being logged.
+    value : any
+        Value of the parameter being logged.
+    '''
+    log('setting: {} = {}'.format(click.style(str(name)),
+                                  click.style(str(value), fg='yellow')))

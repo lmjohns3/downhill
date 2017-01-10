@@ -74,12 +74,6 @@ class TestOptimizer:
 
     def test_gradient_clip(self):
         opt, data = util.build_rosen('straight')
-        for _ in opt.iterate(data, gradient_clip=1):
-            assert opt.max_gradient_elem == 1
-            break
-        for _ in opt.iterate(data, max_gradient_clip=2):
-            assert opt.max_gradient_elem == 2
-            break
         for _ in opt.iterate(data, max_gradient_elem=3):
             assert opt.max_gradient_elem == 3
             break

@@ -53,6 +53,46 @@ def build(algo, loss, params=None, inputs=None, updates=(), monitors=(),
 class Optimizer(util.Registrar(str('Base'), (), {})):
     '''An optimizer computes gradient updates to iteratively optimize a loss.
 
+    Attributes
+    ----------
+    patience : int, optional
+        Number of validation "failures" that we are willing to tolerate before
+        stopping the optimization process. A validation failure happens whenever
+        the loss on the validation dataset decreases by less than
+        ``min_improvement`` (relative) over the previous best validation loss.
+        Defaults to 5.
+    validate_every : int, optional
+        Evaluate the loss on the validation dataset after making this many
+        passes over the training data. Defaults to 10.
+    min_improvement : float, optional
+        Insist that the validation loss must improve by this relative amount
+        before considering that the optimization has made progress. The
+        optimization process halts when ``patience`` validations have failed to
+        make this relative improvement. Defaults to 0; set to a larger value
+        (e.g., 0.01 for 1% improvement) to halt the optimization process sooner.
+    max_gradient_norm : float, optional
+        Rescale each parameter's gradient so that it has at most this L2 norm.
+        Set to 0 (the default) to disable norm rescaling. If
+        ``max_gradient_elem`` is also specified, then this has no effect.
+    max_gradient_elem : float, optional
+        Perform elementwise clipping on the magnitude of gradient values. Set to
+        0 (the default) to disable. If elementwise clipping is enabled, norm
+        rescaling (via ``max_gradient_norm``) will have no effect. Deprecated
+        synonyms of this parameter are "max_gradient_clip" and "gradient_clip".
+    learning_rate : float, optional
+        Many SGD-based optimization algorithms require a learning rate
+        hyperparameter that scales the gradient step. Defaults to 1e-4.
+    momentum : float, optional
+        Apply momentum to the parameter updates for this optimizer, with the
+        given strength. Typically this value ranges from 0 (no momentum) to
+        :math:`1 - \epsilon` (large momentum). Defaults to 0.
+    nesterov : bool, optional
+        If True, and ``momentum`` is nonzero, apply Nesterov-style momentum to
+        parameter updates for this optimizer. If False, and ``momentum`` is
+        nonzero, "regular" momentum is applied. Has no effect if ``momentum`` is
+        zero. See :class:`NAG <downhill.NAG>` for a description of Nesterov
+        momentum.
+
     Parameters
     ----------
     loss : Theano expression
@@ -106,34 +146,38 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 if not name:
                     name = 'unnamed{}'.format(unnamed)
                     unnamed += 1
-                    click.echo('"{}" unnamed, will be "{}" internally'.format(p, name))
+                    util.log('"{}" unnamed, will be "{}" internally'.format(p, name))
                 self._monitor_names.append('grad({})'.format(name))
                 self._monitor_exprs.append((g * g).sum())
 
-    def _compile(self):
+    def _compile(self, **kwargs):
         '''Compile the Theano functions for evaluating and updating our model.
         '''
-        click.echo('compiling evaluation function')
+        util.log('compiling evaluation function')
         self.f_eval = theano.function(self._inputs,
                                       self._monitor_exprs,
                                       updates=self._updates,
                                       name='evaluation')
         label = self.__class__.__name__
-        click.echo('compiling {} optimizer'.format(label))
-        updates = list(self._updates) + list(self.get_updates())
+        util.log('compiling {} optimizer'.format(click.style(label, fg='red')))
+        updates = list(self._updates) + list(self.get_updates(**kwargs))
         self.f_step = theano.function(self._inputs,
                                       self._monitor_exprs,
                                       updates=updates,
                                       name=label)
 
-    def get_updates(self):
+    def get_updates(self, **kwargs):
         '''Get parameter update expressions for performing optimization.
+
+        Keyword arguments can be applied here to set any of the global
+        optimizer attributes.
 
         Yields
         ------
         updates : (parameter, expression) tuples
             A sequence of parameter updates to be applied during optimization.
         '''
+        self._prepare(**kwargs)
         for param, grad in self._differentiate():
             for var, update in self._get_updates_for(param, grad):
                 # For auxiliary variables, updates are meant to replace the
@@ -162,8 +206,8 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
 
         Yields
         ------
-        param : theano parameter
-        update : theano expression to update the parameter
+        updates : (parameter, expression) tuples
+            A sequence of parameter updates to be applied during optimization.
         '''
         raise NotImplementedError
 
@@ -232,7 +276,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         '''
         label = label or self.__class__.__name__
         fields = (('{}={:.6f}').format(k, v) for k, v in monitors.items())
-        click.echo('{} {} {}{}'.format(label, iteration, ' '.join(fields), suffix))
+        util.log('{} {} {}{}'.format(label, iteration, ' '.join(fields), suffix))
 
     def evaluate(self, dataset):
         '''Evaluate the current model parameters on a dataset.
@@ -289,21 +333,25 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         are specific to a particular optimization technique (e.g., setting up a
         learning rate value).
         '''
-        pass
+        self.learning_rate = util.as_float(kwargs.pop('learning_rate', 1e-4))
+        self.momentum = kwargs.pop('momentum', 0)
+        self.nesterov = kwargs.pop('nesterov', False)
+        self.patience = kwargs.get('patience', 5)
+        self.validate_every = kwargs.pop('validate_every', 10)
+        self.min_improvement = kwargs.pop('min_improvement', 0)
+        self.max_gradient_norm = kwargs.pop('max_gradient_norm', 0)
+        self.max_gradient_elem = kwargs.pop('max_gradient_elem', 0)
 
-    def iterate(self,
-                train=None,
-                valid=None,
-                patience=5,
-                validate_every=10,
-                max_updates=None,
-                min_improvement=0,
-                max_gradient_norm=0,
-                max_gradient_elem=0,
-                learning_rate=1e-4,
-                momentum=0,
-                nesterov=False,
-                **kwargs):
+        util.log_param('patience', self.patience)
+        util.log_param('validate_every', self.validate_every)
+        util.log_param('min_improvement', self.min_improvement)
+        util.log_param('max_gradient_norm', self.max_gradient_norm)
+        util.log_param('max_gradient_elem', self.max_gradient_elem)
+        util.log_param('learning_rate', self.learning_rate)
+        util.log_param('momentum', self.momentum)
+        util.log_param('nesterov', self.nesterov)
+
+    def iterate(self, train=None, valid=None, max_updates=None, **kwargs):
         r'''Optimize a loss iteratively using a training and validation dataset.
 
         This method yields a series of monitor values to the caller. After every
@@ -315,57 +363,21 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
         iteration; in this case, the most recent validation monitors will be
         yielded along with the training monitors.
 
+        Additional keyword arguments supplied here will set the global
+        optimizer attributes.
+
         Parameters
         ----------
         train : sequence or :class:`Dataset <downhill.dataset.Dataset>`
             A set of training data for computing updates to model parameters.
-        valid : sequence or :class:`Dataset <downhill.dataset.Dataset>`, optional
+        valid : sequence or :class:`Dataset <downhill.dataset.Dataset>`
             A set of validation data for computing monitor values and
             determining when the loss has stopped improving. Defaults to the
             training data.
-        patience : int, optional
-            Number of validation "failures" that we are willing to tolerate
-            before stopping the optimization process. A validation failure
-            happens whenever the loss on the validation dataset decreases by
-            less than ``min_improvement`` (relative) over the previous best
-            validation loss. Defaults to 5.
-        validate_every : int, optional
-            Evaluate the loss on the validation dataset after making this many
-            passes over the training data. Defaults to 10.
         max_updates : int, optional
             If specified, halt optimization after this many gradient updates
             have been processed. If not provided, uses early stopping to decide
             when to halt.
-        min_improvement : float, optional
-            Insist that the validation loss must improve by this relative amount
-            before considering that the optimization has made progress. The
-            optimization process halts when ``patience`` validations have failed
-            to make this relative improvement. Defaults to 0; set to a larger
-            value (e.g., 0.01 for 1% improvement) to halt the optimization
-            process sooner.
-        max_gradient_norm : float, optional
-            Rescale each parameter's gradient so that it has at most this L2
-            norm. Set to 0 (the default) to disable norm rescaling. If
-            ``max_gradient_elem`` is also specified, then this has no effect.
-        max_gradient_elem : float, optional
-            Perform elementwise clipping on the magnitude of gradient values.
-            Set to 0 (the default) to disable. If elementwise clipping is
-            enabled, norm rescaling (via ``max_gradient_norm``) will have no
-            effect. Deprecated synonyms of this parameter are
-            "max_gradient_clip" and "gradient_clip".
-        learning_rate : float, optional
-            Many SGD-based optimization algorithms require a learning rate
-            hyperparameter that scales the gradient step. Defaults to 1e-4.
-        momentum : float, optional
-            Apply momentum to the parameter updates for this optimizer, with the
-            given strength. Typically this value ranges from 0 (no momentum) to
-            :math:`1 - \epsilon` (large momentum). Defaults to 0.
-        nesterov : bool, optional
-            If True, and ``momentum`` is nonzero, apply Nesterov-style momentum
-            to parameter updates for this optimizer. If False, and ``momentum``
-            is nonzero, "regular" momentum is applied. Has no effect if
-            ``momentum`` is zero. See :class:`NAG <downhill.NAG>` for a
-            description of Nesterov momentum.
 
         Yields
         ------
@@ -376,34 +388,7 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
             A dictionary containing monitor values evaluated on the validation
             dataset.
         '''
-        self.patience = patience
-        self.validate_every = validate_every
-        self.min_improvement = min_improvement
-        self.max_gradient_norm = max_gradient_norm
-        self.max_gradient_elem = max_gradient_elem
-        if 'max_gradient_clip' in kwargs:
-            warnings.warn('Use "max_gradient_elem" instead of "max_gradient_clip"',
-                          DeprecationWarning)
-            self.max_gradient_elem = kwargs.pop('max_gradient_clip')
-        if 'gradient_clip' in kwargs:
-            warnings.warn('Use "max_gradient_elem" instead of "gradient_clip"',
-                          DeprecationWarning)
-            self.max_gradient_elem = kwargs.pop('gradient_clip')
-        self.learning_rate = util.as_float(learning_rate)
-        self.momentum = momentum
-        self.nesterov = nesterov
-        click.echo('-- patience = {}'.format(patience))
-        click.echo('-- validate_every = {}'.format(validate_every))
-        click.echo('-- max_updates = {}'.format(max_updates))
-        click.echo('-- min_improvement = {}'.format(min_improvement))
-        click.echo('-- max_gradient_norm = {}'.format(max_gradient_norm))
-        click.echo('-- max_gradient_elem = {}'.format(max_gradient_elem))
-        click.echo('-- learning_rate = {}'.format(learning_rate))
-        click.echo('-- momentum = {}'.format(momentum))
-        click.echo('-- nesterov = {}'.format(nesterov))
-
-        self._prepare(**kwargs)
-        self._compile()
+        self._compile(**kwargs)
 
         if valid is None:
             valid = train
@@ -414,15 +399,15 @@ class Optimizer(util.Registrar(str('Base'), (), {})):
                 try:
                     validation = self.evaluate(valid)
                 except KeyboardInterrupt:
-                    click.echo('interrupted!')
+                    util.log('interrupted!')
                     break
                 if self._test_patience(validation):
-                    click.echo('patience elapsed!')
+                    util.log('patience elapsed!')
                     break
             try:
                 training = self._step(train)
             except KeyboardInterrupt:
-                click.echo('interrupted!')
+                util.log('interrupted!')
                 break
             iteration += 1
             self._log(training, iteration)

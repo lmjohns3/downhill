@@ -3,7 +3,6 @@
 '''This module defines gradient descent optimizers with adaptive learning rates.
 '''
 
-import click
 import numpy as np
 import theano
 import theano.tensor as TT
@@ -11,7 +10,7 @@ import theano.tensor as TT
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 
 from .base import Optimizer
-from .util import as_float, shared_like
+from . import util
 
 __all__ = ['RProp', 'RMSProp', 'ADAGRAD', 'ADADELTA', 'ESGD', 'Adam']
 
@@ -98,19 +97,19 @@ class RProp(Optimizer):
                  rprop_min_step=0,
                  rprop_max_step=100,
                  **kwargs):
-        self.step_increase = as_float(rprop_increase)
-        self.step_decrease = as_float(rprop_decrease)
-        self.min_step = as_float(rprop_min_step)
-        self.max_step = as_float(rprop_max_step)
-        click.echo('-- rprop_increase = {}'.format(rprop_increase))
-        click.echo('-- rprop_decrease = {}'.format(rprop_decrease))
-        click.echo('-- rprop_min_step = {}'.format(rprop_min_step))
-        click.echo('-- rprop_max_step = {}'.format(rprop_max_step))
+        self.step_increase = util.as_float(rprop_increase)
+        self.step_decrease = util.as_float(rprop_decrease)
+        self.min_step = util.as_float(rprop_min_step)
+        self.max_step = util.as_float(rprop_max_step)
+        util.log_param('rprop_increase', rprop_increase)
+        util.log_param('rprop_decrease', rprop_decrease)
+        util.log_param('rprop_min_step', rprop_min_step)
+        util.log_param('rprop_max_step', rprop_max_step)
         super(RProp, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
-        grad_tm1 = shared_like(param, 'grad')
-        step_tm1 = shared_like(param, 'step', self.learning_rate.eval())
+        grad_tm1 = util.shared_like(param, 'grad')
+        step_tm1 = util.shared_like(param, 'step', self.learning_rate.eval())
         test = grad * grad_tm1
         diff = TT.lt(test, 0)
         steps = step_tm1 * (TT.eq(test, 0) +
@@ -177,12 +176,12 @@ class ADAGRAD(Optimizer):
     '''
 
     def _prepare(self, rms_regularizer=1e-8, **kwargs):
-        self.epsilon = as_float(rms_regularizer)
-        click.echo('-- rms_regularizer = {}'.format(rms_regularizer))
+        self.epsilon = util.as_float(rms_regularizer)
+        util.log_param('rms_regularizer', rms_regularizer)
         super(ADAGRAD, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
-        g2_tm1 = shared_like(param, 'g2_acc')
+        g2_tm1 = util.shared_like(param, 'g2_acc')
         g2_t = g2_tm1 + grad * grad
         yield g2_tm1, g2_t
         yield param, grad * self.learning_rate / TT.sqrt(g2_t + self.epsilon)
@@ -261,15 +260,15 @@ class RMSProp(Optimizer):
     '''
 
     def _prepare(self, rms_halflife=14, rms_regularizer=1e-8, **kwargs):
-        self.ewma = as_float(np.exp(-np.log(2) / rms_halflife))
-        self.epsilon = as_float(rms_regularizer)
-        click.echo('-- rms_halflife = {}'.format(rms_halflife))
-        click.echo('-- rms_regularizer = {}'.format(rms_regularizer))
+        self.ewma = util.as_float(np.exp(-np.log(2) / rms_halflife))
+        self.epsilon = util.as_float(rms_regularizer)
+        util.log_param('rms_halflife', rms_halflife)
+        util.log_param('rms_regularizer', rms_regularizer)
         super(RMSProp, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
-        g1_tm1 = shared_like(param, 'g1_ewma')
-        g2_tm1 = shared_like(param, 'g2_ewma')
+        g1_tm1 = util.shared_like(param, 'g1_ewma')
+        g2_tm1 = util.shared_like(param, 'g2_ewma')
         g1_t = self.ewma * g1_tm1 + (1 - self.ewma) * grad
         g2_t = self.ewma * g2_tm1 + (1 - self.ewma) * grad * grad
         rms = TT.sqrt(g2_t - g1_t * g1_t + self.epsilon)
@@ -342,8 +341,8 @@ class ADADELTA(RMSProp):
     '''
 
     def _get_updates_for(self, param, grad):
-        x2_tm1 = shared_like(param, 'x2_ewma')
-        g2_tm1 = shared_like(param, 'g2_ewma')
+        x2_tm1 = util.shared_like(param, 'x2_ewma')
+        g2_tm1 = util.shared_like(param, 'g2_ewma')
         g2_t = self.ewma * g2_tm1 + (1 - self.ewma) * grad * grad
         delta = grad * TT.sqrt(x2_tm1 + self.epsilon) / TT.sqrt(g2_t + self.epsilon)
         x2_t = self.ewma * x2_tm1 + (1 - self.ewma) * delta * delta
@@ -444,7 +443,7 @@ class ESGD(RMSProp):
         super(ESGD, self).__init__(*args, **kwargs)
 
     def _get_updates_for(self, param, grad):
-        D_tm1 = shared_like(param, 'D_ewma')
+        D_tm1 = util.shared_like(param, 'D_ewma')
         v = self.rng.normal(param.shape)
         if self.hv_method == 'rop':
             Hv = TT.Rop(grad, param, v)
@@ -537,15 +536,15 @@ class Adam(RMSProp):
                  beta1_halflife=7,
                  beta2_halflife=69,
                  **kwargs):
-        self.beta1_decay = as_float(beta1_decay)
-        self.beta1 = as_float(np.exp(-np.log(2) / beta1_halflife))
-        self.beta2 = as_float(np.exp(-np.log(2) / beta2_halflife))
+        self.beta1_decay = util.as_float(beta1_decay)
+        self.beta1 = util.as_float(np.exp(-np.log(2) / beta1_halflife))
+        self.beta2 = util.as_float(np.exp(-np.log(2) / beta2_halflife))
         super(Adam, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
         t_tm1 = theano.shared(np.cast['float32'](0), 't')
-        g1_tm1 = shared_like(param, 'g1_ewma')
-        g2_tm1 = shared_like(param, 'g2_ewma')
+        g1_tm1 = util.shared_like(param, 'g1_ewma')
+        g2_tm1 = util.shared_like(param, 'g2_ewma')
         beta1 = self.beta1 * self.beta1_decay ** t_tm1
         g1_t = beta1 * g1_tm1 + (1 - beta1) * grad
         g2_t = self.beta2 * g2_tm1 + (1 - self.beta2) * grad * grad

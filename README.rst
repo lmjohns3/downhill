@@ -64,26 +64,59 @@ single call to ``downhill.minimize``:
   # Set up a matrix factorization problem to optimize.
   u = theano.shared(rand(A, K), name='u')
   v = theano.shared(rand(K, B), name='v')
-  e = TT.sqr(TT.matrix() - TT.dot(u, v))
+  z = TT.matrix()
+  err = TT.sqr(z - TT.dot(u, v))
+  loss = err.mean() + abs(u).mean() + (v * v).mean()
 
   # Minimize the regularized loss with respect to a data matrix.
   y = np.dot(rand(A, K), rand(K, B)) + rand(A, B)
 
+  # Monitor during optimization.
+  monitors = (('err', err.mean()),
+              ('|u|<0.1', (abs(u) < 0.1).mean()),
+              ('|v|<0.1', (abs(v) < 0.1).mean()))
+
   downhill.minimize(
-      loss=e.mean() + abs(u).mean() + (v * v).mean(),
+      loss=loss,
       train=[y],
       patience=0,
       batch_size=A,                 # Process y as a single batch.
       max_gradient_norm=1,          # Prevent gradient explosion!
       learning_rate=0.1,
-      monitors=(('err', e.mean()),  # Monitor during optimization.
-                ('|u|<0.1', (abs(u) < 0.1).mean()),
-                ('|v|<0.1', (abs(v) < 0.1).mean())),
+      monitors=monitors,
       monitor_gradients=True)
 
   # Print out the optimized coefficients u and basis v.
   print('u =', u.get_value())
   print('v =', v.get_value())
+
+If you prefer to maintain more control over your model during optimization,
+downhill provides an iterative optimization interface:
+
+.. code:: python
+
+  opt = downhill.build(algo='rmsprop',
+                       loss=loss,
+                       monitors=monitors,
+                       monitor_gradients=True)
+
+  for metrics, _ in opt.iterate(train=[[y]],
+                                patience=0,
+                                batch_size=A,
+                                max_gradient_norm=1,
+                                learning_rate=0.1):
+      print(metrics)
+
+If that's still not enough, you can just plain ask downhill for the updates to
+your model variables and do everything else yourself:
+
+.. code:: python
+
+  updates = downhill.build('rmsprop', loss).get_updates(
+      batch_size=A, max_gradient_norm=1, learning_rate=0.1)
+  func = theano.function([z], loss, updates=list(updates))
+  for _ in range(100):
+      print(func(y))  # Evaluate func and apply variable updates.
 
 More Information
 ================
