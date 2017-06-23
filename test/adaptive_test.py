@@ -149,7 +149,6 @@ class TestAdam:
         opt, data = util.build_rosen('adam')
         for _ in opt.iterate(data):
             assert np.allclose(opt.learning_rate.eval(), 1e-4)
-            assert np.allclose(opt.beta1_decay.eval(), 1 - 1e-6)
             assert np.allclose(opt.beta1.eval(), np.exp(-np.log(2) / 7))
             assert np.allclose(opt.beta2.eval(), np.exp(-np.log(2) / 69))
             assert np.allclose(opt.epsilon.eval(), 1e-8)
@@ -159,12 +158,10 @@ class TestAdam:
         opt, data = util.build_rosen('adam')
         for _ in opt.iterate(data,
                              learning_rate=0.3,
-                             beta1_decay=0.5,
                              beta1_halflife=10,
                              beta2_halflife=20,
                              rms_regularizer=11):
             assert np.allclose(opt.learning_rate.eval(), 0.3)
-            assert np.allclose(opt.beta1_decay.eval(), 0.5)
             assert np.allclose(opt.beta1.eval(), np.exp(-np.log(2) / 10))
             assert np.allclose(opt.beta2.eval(), np.exp(-np.log(2) / 20))
             assert np.allclose(opt.epsilon.eval(), 11)
