@@ -532,25 +532,23 @@ class Adam(RMSProp):
     '''
 
     def _prepare(self,
-                 beta1_decay=1 - 1e-6,
                  beta1_halflife=7,
                  beta2_halflife=69,
                  **kwargs):
-        self.beta1_decay = util.as_float(beta1_decay)
         self.beta1 = util.as_float(np.exp(-np.log(2) / beta1_halflife))
         self.beta2 = util.as_float(np.exp(-np.log(2) / beta2_halflife))
         super(Adam, self)._prepare(**kwargs)
 
     def _get_updates_for(self, param, grad):
         t_tm1 = theano.shared(np.cast['float32'](0), 't')
+        t_t = 1 + t_tm1
         g1_tm1 = util.shared_like(param, 'g1_ewma')
         g2_tm1 = util.shared_like(param, 'g2_ewma')
-        beta1 = self.beta1 * self.beta1_decay ** t_tm1
-        g1_t = beta1 * g1_tm1 + (1 - beta1) * grad
+        g1_t = self.beta1 * g1_tm1 + (1 - self.beta1) * grad
         g2_t = self.beta2 * g2_tm1 + (1 - self.beta2) * grad * grad
-        numer = g1_t / (1 - beta1)
-        denom = TT.sqrt(g2_t / (1 - self.beta2))
-        yield t_tm1, t_tm1 + 1
+        numer = g1_t / (1 - self.beta1 ** t_t)
+        denom = TT.sqrt(g2_t / (1 - self.beta2 ** t_t))
+        yield t_tm1, t_t
         yield g1_tm1, g1_t
         yield g2_tm1, g2_t
         yield param, self.learning_rate * numer / (denom + self.epsilon)
