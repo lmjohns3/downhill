@@ -3,6 +3,8 @@
 '''A module of utility functions and other goodies.'''
 
 import click
+import datetime
+import inspect
 import numpy as np
 import theano
 import theano.tensor as TT
@@ -93,15 +95,38 @@ def find_inputs_and_params(node):
     return list(inputs), list(params)
 
 
-def log(msg):
+_detailed_callsite = False
+
+
+def enable_detailed_callsite_logging():
+    '''Enable detailed callsite logging.'''
+    global _detailed_callsite
+    _detailed_callsite = True
+
+
+def log(msg, *args, **kwargs):
     '''Log a message to the console.
 
     Parameters
     ----------
-    msg : any
-        A string to log to the console
+    msg : str
+        A string to display on the console. This can contain {}-style
+        formatting commands; the remaining positional and keyword arguments
+        will be used to fill them in.
     '''
-    click.echo('{}: {}'.format(click.style('downhill', fg='cyan'), msg))
+    now = datetime.datetime.now()
+    module = 'downhill'
+    if _detailed_callsite:
+        caller = inspect.stack()[1]
+        parts = caller.filename.replace('.py', '').split('/')
+        module = '{}:{}'.format(
+            '.'.join(parts[parts.index('downhill')+1:]), caller.lineno)
+    click.echo(' '.join((
+        click.style(now.strftime('%Y%m%d'), fg='blue'),
+        click.style(now.strftime('%H%M%S'), fg='cyan'),
+        click.style(module, fg='magenta'),
+        msg.format(*args, **kwargs),
+    )))
 
 
 def log_param(name, value):
@@ -114,5 +139,5 @@ def log_param(name, value):
     value : any
         Value of the parameter being logged.
     '''
-    log('setting: {} = {}'.format(click.style(str(name)),
-                                  click.style(str(value), fg='yellow')))
+    log('setting {} = {}', click.style(str(name)),
+        click.style(str(value), fg='yellow'))

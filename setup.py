@@ -5,8 +5,8 @@ setuptools.setup(
     name='downhill',
     version='0.5.0pre',
     packages=setuptools.find_packages(),
-    author='Leif Johnson',
-    author_email='leif@lmjohns3.com',
+    author='lmjohns3',
+    author_email='downhill-users@googlegroups.com',
     description='Stochastic optimization routines for Theano',
     long_description=open(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), 'README.rst')).read(),
